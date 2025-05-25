@@ -7,7 +7,12 @@ const loadPdfjs = () => import('pdfjs-dist').then(pdfjs => {
   return pdfjs
 })
 
-export default function DocumentUpload() {
+interface DocumentUploadProps {
+  isDemo?: boolean
+  onDemoUsed?: () => void
+}
+
+export default function DocumentUpload({ isDemo = false, onDemoUsed }: DocumentUploadProps) {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [analysis, setAnalysis] = useState<string>('')
@@ -82,7 +87,28 @@ export default function DocumentUpload() {
       }
 
       const { analysis } = await response.json()
-      setAnalysis(analysis)
+      
+      if (isDemo) {
+        // For demo mode, show partial results
+        const lines = analysis.split('\n')
+        const demoAnalysis = lines.slice(0, 10).join('\n') + 
+          '\n\n---\n\n**🔒 Demo Mode - Showing partial results**\n\n' +
+          '✨ **Unlock full report for just $10:**\n' +
+          '- See all compliance risks identified\n' +
+          '- Get detailed recommendations\n' +
+          '- Unlimited document scans\n' +
+          '- Lifetime access\n\n' +
+          '*[Upgrade Now to See Full Report]*'
+        
+        setAnalysis(demoAnalysis)
+        
+        // Mark demo as used
+        if (onDemoUsed) {
+          onDemoUsed()
+        }
+      } else {
+        setAnalysis(analysis)
+      }
       
       // Clear file from memory
       setFile(null)
@@ -98,29 +124,40 @@ export default function DocumentUpload() {
 
   return (
     <div className="space-y-6">
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.txt,.csv"
-          onChange={handleFileSelect}
-          className="hidden"
-          id="fileInput"
-        />
-        <label
-          htmlFor="fileInput"
-          className="cursor-pointer block w-full"
-        >
-          <div className="space-y-2">
-            <div className="text-4xl">📄</div>
-            <div className="text-sm text-gray-600">
-              Click to select a document
+      <div className="bg-white rounded-lg shadow-sm p-8">
+        <h3 className="text-lg font-semibold mb-4">Upload Document for Analysis</h3>
+        
+        <div className="border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-lg p-8 text-center transition-colors">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.txt,.csv"
+            onChange={handleFileSelect}
+            className="hidden"
+            id="fileInput"
+          />
+          <label
+            htmlFor="fileInput"
+            className="cursor-pointer block w-full"
+          >
+            <div className="space-y-3">
+              <div className="text-5xl">📄</div>
+              <div>
+                <p className="text-base font-medium text-gray-700">
+                  Drop your document here or click to browse
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Supports PDF, TXT, or CSV files up to 10MB
+                </p>
+              </div>
+              {isDemo && (
+                <p className="text-xs text-blue-600 font-medium">
+                  🎁 Free demo - 1 scan available
+                </p>
+              )}
             </div>
-            <div className="text-xs text-gray-500">
-              PDF, TXT, or CSV files only
-            </div>
-          </div>
-        </label>
+          </label>
+        </div>
       </div>
 
       {file && (
@@ -144,18 +181,36 @@ export default function DocumentUpload() {
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+          <span className="text-red-500 text-xl">⚠️</span>
+          <div>
+            <p className="text-red-800 font-medium">Analysis Error</p>
+            <p className="text-red-700 text-sm mt-1">{error}</p>
+          </div>
         </div>
       )}
 
       {analysis && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h3 className="font-bold text-green-800 mb-2">Analysis Results:</h3>
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">📊</span>
+            <h3 className="text-lg font-bold text-gray-900">Compliance Analysis Report</h3>
+          </div>
           <div 
-            className="prose prose-sm text-green-700"
+            className="prose prose-sm max-w-none text-gray-700"
             dangerouslySetInnerHTML={{ 
-              __html: analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+              __html: analysis
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-900">$1</strong>')
+                .replace(/##\s(.*?)(<br>|$)/g, '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-900">$1</h3>')
+                .replace(/🚩/g, '<span class="text-red-500">🚩</span>')
+                .replace(/✅/g, '<span class="text-green-500">✅</span>')
+                .replace(/⚠️/g, '<span class="text-yellow-500">⚠️</span>')
+                .replace(/💰/g, '<span class="text-green-500">💰</span>')
+                .replace(/📄/g, '<span class="text-blue-500">📄</span>')
+                .replace(/🔒/g, '<span class="text-gray-500">🔒</span>')
+                .replace(/✨/g, '<span class="text-yellow-500">✨</span>')
+                .replace(/\[Upgrade Now to See Full Report\]/g, '<button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors">Upgrade Now to See Full Report</button>')
             }}
           />
         </div>

@@ -35,9 +35,18 @@ export default function PayNowButton() {
     <button
       onClick={handleClick}
       disabled={loading}
-      className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+      className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl inline-flex items-center justify-center gap-2"
     >
-      {loading ? 'Processing...' : 'Pay $10 to Unlock Scanner'}
+      {loading ? (
+        <>
+          <span className="animate-spin">⏳</span>
+          Processing...
+        </>
+      ) : (
+        <>
+          💳 Unlock Full Access - Just $10
+        </>
+      )}
     </button>
   )
 }

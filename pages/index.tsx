@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/components/AuthProvider'
 import PayNowButton from '@/components/PayNowButton'
 import DocumentUpload from '@/components/DocumentUpload'
+import LandingPage from '@/components/LandingPage'
 
 export default function Home() {
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle, logout } = useAuth()
@@ -11,6 +12,8 @@ export default function Home() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [authError, setAuthError] = useState('')
   const [hasPaid, setHasPaid] = useState(false)
+  const [hasUsedDemo, setHasUsedDemo] = useState(false)
+  const [showAuthForm, setShowAuthForm] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -19,6 +22,11 @@ export default function Home() {
       localStorage.setItem('hasPaid', 'true')
     } else if (localStorage.getItem('hasPaid') === 'true') {
       setHasPaid(true)
+    }
+    
+    // Check if user has used their free demo
+    if (localStorage.getItem('hasUsedDemo') === 'true') {
+      setHasUsedDemo(true)
     }
   }, [router.query])
 
@@ -69,114 +77,253 @@ export default function Home() {
   }
 
   if (!user) {
+    if (!showAuthForm) {
+      return (
+        <LandingPage 
+          onSignIn={() => {
+            setShowAuthForm(true)
+            setIsSignUp(false)
+          }}
+          onSignUp={() => {
+            setShowAuthForm(true)
+            setIsSignUp(true)
+          }}
+        />
+      )
+    }
+
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">
-            AI Compliance Scanner
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Scan documents for ATO/IRS compliance and audit risks.
-          </p>
-          
-          <form onSubmit={handleEmailAuth} className="space-y-4 mb-4">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <button
-              type="submit"
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-            >
-              {isSignUp ? 'Sign Up' : 'Sign In'}
-            </button>
-          </form>
-          
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4">
+        <div className="max-w-md mx-auto">
           <button
-            onClick={handleGoogleAuth}
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-4"
+            onClick={() => setShowAuthForm(false)}
+            className="mb-4 text-gray-600 hover:text-gray-800 flex items-center gap-2"
           >
-            Sign in with Google
+            ← Back to home
           </button>
           
-          <p className="text-center text-sm">
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-blue-500 hover:underline ml-1"
-            >
-              {isSignUp ? 'Sign In' : 'Sign Up'}
-            </button>
-          </p>
-          
-          {authError && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">{authError}</p>
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+              {isSignUp ? 'Create Your Account' : 'Welcome Back'}
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {isSignUp 
+                ? 'Start with a free demo scan, then unlock unlimited access for just $10' 
+                : 'Sign in to access your compliance scanner'}
+            </p>
+            
+            <form onSubmit={handleEmailAuth} className="space-y-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                {isSignUp ? 'Sign Up for Free Demo' : 'Sign In'}
+              </button>
+            </form>
+            
+            <div className="relative mb-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
             </div>
-          )}
+            
+            <button
+              onClick={handleGoogleAuth}
+              className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors mb-4"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+              Continue with Google
+            </button>
+            
+            <p className="text-center text-sm text-gray-600">
+              {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-blue-600 hover:underline ml-1 font-medium"
+              >
+                {isSignUp ? 'Sign In' : 'Sign Up'}
+              </button>
+            </p>
+            
+            {authError && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-700 text-sm font-medium">{authError}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     )
   }
 
+  const isDemoMode = !hasPaid && !hasUsedDemo
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              AI Compliance Scanner
-            </h1>
-            <p className="text-sm text-gray-600">
-              Welcome, {user.email}
-            </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold text-gray-900">
+                AI Tax Compliance Scanner
+              </h1>
+              {hasPaid && (
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                  PRO
+                </span>
+              )}
+              {isDemoMode && (
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                  DEMO MODE
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">{user.email}</span>
+              <button
+                onClick={logout}
+                className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
-          <button
-            onClick={logout}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
-            Sign Out
-          </button>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        {/* Welcome Message */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-2">
+            Welcome back, {user.email?.split('@')[0]}!
+          </h2>
+          <p className="text-gray-600">
+            Upload your tax documents, invoices, or financial CSVs to scan for ATO/IRS compliance risks.
+          </p>
+        </div>
+
+        {/* Trust Badges */}
+        <div className="flex justify-center items-center gap-6 mb-8 text-sm text-gray-500">
+          <span className="flex items-center gap-2">
+            <span className="text-green-500">🔒</span> No documents stored
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="text-blue-500">⚡</span> Instant analysis
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="text-purple-500">🤖</span> Powered by Claude AI
+          </span>
         </div>
         
         {router.query.cancelled === 'true' && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-yellow-800 text-sm">Payment was cancelled. Please try again to unlock the scanner.</p>
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-yellow-800">
+              Payment was cancelled. Complete your purchase to unlock unlimited scans.
+            </p>
           </div>
         )}
         
-        {!hasPaid ? (
-          <div className="text-center py-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Unlock Document Analysis
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Pay $10 to unlock AI-powered compliance scanning for your documents.
+        {/* Demo Mode Notice */}
+        {isDemoMode && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold text-blue-900 mb-1">🎁 Free Demo Mode</h3>
+            <p className="text-blue-700 text-sm">
+              You can scan one document for free! After your demo scan, upgrade for just $10 to unlock:
             </p>
-            <PayNowButton />
-          </div>
-        ) : (
-          <div>
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 font-medium">✅ Scanner Unlocked!</p>
-              <p className="text-green-600 text-sm">Upload your documents for compliance analysis.</p>
-            </div>
-            <DocumentUpload />
+            <ul className="mt-2 text-sm text-blue-700 list-disc list-inside">
+              <li>Unlimited document scans</li>
+              <li>Full detailed compliance reports</li>
+              <li>Lifetime access - no subscriptions</li>
+            </ul>
           </div>
         )}
-      </div>
+
+        {/* After Demo Used */}
+        {hasUsedDemo && !hasPaid && (
+          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+            <div className="text-6xl mb-4">🎯</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Demo Scan Complete!
+            </h2>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              You've used your free demo scan. Unlock unlimited scans and full reports for just $10 - one time payment, lifetime access.
+            </p>
+            <PayNowButton />
+            <p className="mt-4 text-sm text-gray-500">
+              No subscriptions • Instant access • 100% secure payment via Stripe
+            </p>
+          </div>
+        )}
+        
+        {/* Paid User View */}
+        {hasPaid && (
+          <div>
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+              <div>
+                <p className="text-green-800 font-medium">✅ Full Access Unlocked!</p>
+                <p className="text-green-600 text-sm">Scan unlimited documents with detailed compliance reports.</p>
+              </div>
+              <div className="text-green-700 text-sm font-medium">
+                Lifetime Access
+              </div>
+            </div>
+            <DocumentUpload isDemo={false} onDemoUsed={() => {}} />
+          </div>
+        )}
+
+        {/* Demo Mode Document Upload */}
+        {isDemoMode && (
+          <DocumentUpload 
+            isDemo={true} 
+            onDemoUsed={() => {
+              setHasUsedDemo(true)
+              localStorage.setItem('hasUsedDemo', 'true')
+            }}
+          />
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="mt-16 pb-8">
+        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-500">
+          <p className="mb-2">
+            Built with ❤️ by indie makers • Powered by Claude AI, Stripe & Firebase
+          </p>
+          <p>
+            This tool identifies potential risks - always consult a tax professional for advice
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }
