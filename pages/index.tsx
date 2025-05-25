@@ -1,18 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/components/AuthProvider'
-import PayNowButton from '@/components/PayNowButton'
 import DocumentUpload from '@/components/DocumentUpload'
-import LandingPage from '@/components/LandingPage'
 import AuthForm from '@/components/AuthForm'
 import CreditsDisplay from '@/components/CreditsDisplay'
 import BuyCreditsModal from '@/components/BuyCreditsModal'
-import { getUserCredits, addCredits, UserCredits } from '@/utils/credits'
+import { getUserCredits, UserCredits } from '@/utils/credits'
 
 export default function Home() {
   const { user, logout } = useAuth()
-  const [hasPaid, setHasPaid] = useState(false)
-  const [hasUsedDemo, setHasUsedDemo] = useState(false)
   const [showAuthForm, setShowAuthForm] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
@@ -20,18 +16,6 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    if (router.query.paid === 'true') {
-      setHasPaid(true)
-      localStorage.setItem('hasPaid', 'true')
-    } else if (localStorage.getItem('hasPaid') === 'true') {
-      setHasPaid(true)
-    }
-    
-    // Check if user has used their free demo
-    if (localStorage.getItem('hasUsedDemo') === 'true') {
-      setHasUsedDemo(true)
-    }
-    
     // Handle successful payment redirect
     if (router.query.payment === 'success' && router.query.credits) {
       const creditsAdded = parseInt(router.query.credits as string)
@@ -286,10 +270,9 @@ export default function Home() {
     )
   }
 
-  const isDemoMode = false // Removed demo mode - now using credit system
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">

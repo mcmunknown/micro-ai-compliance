@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { RedFlag, calculateDaysUntilDeadline, getSeverityColor } from '@/utils/types/analysis'
 import { AlertTriangle, Clock, DollarSign, FileText, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
+import { downloadForm } from '@/utils/formService'
 
 interface RedFlagCardProps {
   flag: RedFlag
@@ -143,7 +144,10 @@ export default function RedFlagCard({ flag, index }: RedFlagCardProps) {
             
             {flag.fix.form && (
               <div className="flex items-center gap-3">
-                <button className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors flex items-center gap-2">
+                <button 
+                  onClick={() => downloadForm(flag.fix.form!)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors flex items-center gap-2"
+                >
                   <FileText className="w-4 h-4" />
                   Download {flag.fix.form}
                   <ExternalLink className="w-3 h-3" />

@@ -1,12 +1,15 @@
 import React from 'react'
 import { RequiredForm, calculateDaysUntilDeadline, ensureDate } from '@/utils/types/analysis'
 import { FileText, Calendar, DollarSign, Download, AlertTriangle, ExternalLink, Globe } from 'lucide-react'
+import { downloadForm, getOnlineFilingUrl, generatePrefilledInstructions, getFormInstructions } from '@/utils/formService'
 
 interface RequiredFormsSectionProps {
   forms: RequiredForm[]
 }
 
 export default function RequiredFormsSection({ forms }: RequiredFormsSectionProps) {
+  const [showInstructions, setShowInstructions] = React.useState<Record<string, boolean>>({})
+  
   const sortedForms = [...forms].sort((a, b) => {
     const dateA = ensureDate(a.deadline)
     const dateB = ensureDate(b.deadline)
@@ -131,30 +134,63 @@ export default function RequiredFormsSection({ forms }: RequiredFormsSectionProp
 
                 {/* Actions */}
                 <div className="flex flex-col gap-3 lg:w-48">
-                  {form.downloadUrl ? (
-                    <button className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
-                      <Download className="w-4 h-4" />
-                      Download Form
-                    </button>
-                  ) : (
-                    <button className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors">
-                      <ExternalLink className="w-4 h-4" />
-                      Get Form Online
+                  <button 
+                    onClick={() => downloadForm(form.formNumber)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Form
+                  </button>
+                  
+                  {(form.filingMethod === 'ONLINE' || form.filingMethod === 'BOTH') && (
+                    <button 
+                      onClick={() => window.open(getOnlineFilingUrl(form.formNumber), '_blank')}
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                    >
+                      <Globe className="w-4 h-4" />
+                      File Online
                     </button>
                   )}
 
                   {form.prefillData && Object.keys(form.prefillData).length > 0 && (
-                    <button className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors">
+                    <button 
+                      onClick={() => {
+                        const instructions = generatePrefilledInstructions(form)
+                        alert(instructions)
+                      }}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
                       <FileText className="w-4 h-4" />
-                      Generate Pre-filled
+                      View Pre-fill Data
                     </button>
                   )}
 
-                  <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors">
+                  <button 
+                    onClick={() => setShowInstructions(prev => ({ ...prev, [form.formNumber]: !prev[form.formNumber] }))}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                  >
                     Instructions
                   </button>
                 </div>
               </div>
+              
+              {/* Instructions Panel */}
+              {showInstructions[form.formNumber] && (
+                <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h6 className="font-semibold text-blue-800 mb-3">📋 Instructions for {form.formNumber}:</h6>
+                  <ol className="space-y-2">
+                    {getFormInstructions(form.formNumber).map((instruction, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm text-blue-700">
+                        <span className="font-bold text-blue-600">{idx + 1}.</span>
+                        <span>{instruction}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <div className="mt-3 pt-3 border-t border-blue-200">
+                    <p className="text-xs text-blue-600">💡 Pro tip: Download the form first, then follow these steps carefully.</p>
+                  </div>
+                </div>
+              )}
 
               {/* Urgency Alert */}
               {(isOverdue || isUrgent) && (
