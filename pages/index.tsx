@@ -49,9 +49,41 @@ export default function Home() {
       } else if (error.code === 'auth/weak-password') {
         setAuthError('Password should be at least 6 characters')
       } else if (error.code === 'auth/email-already-in-use') {
-        setAuthError('Email already registered. Try signing in instead.')
-      } else if (error.code === 'auth/user-not-found') {
-        setAuthError('No account found with this email. Try signing up.')
+        setAuthError('This email is already registered. Switching to sign in...')
+        setIsSignUp(false)
+        // Try to sign in automatically
+        setTimeout(async () => {
+          try {
+            await signInWithEmail(email, password)
+          } catch (signInError: any) {
+            if (signInError.code === 'auth/wrong-password') {
+              setAuthError('Account exists. Please enter your password to sign in.')
+            } else if (signInError.code === 'auth/invalid-credential') {
+              setAuthError('Account exists but password is incorrect.')
+            } else {
+              setAuthError('Account exists. Please sign in with your password.')
+            }
+          }
+        }, 500)
+      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        if (!isSignUp) {
+          setAuthError('No account found. Creating a new account...')
+          setIsSignUp(true)
+          // Try to sign up automatically
+          setTimeout(async () => {
+            try {
+              await signUpWithEmail(email, password)
+            } catch (signUpError: any) {
+              if (signUpError.code === 'auth/weak-password') {
+                setAuthError('Please use a stronger password (at least 6 characters)')
+              } else {
+                setAuthError('Ready to create your account. Click Sign Up.')
+              }
+            }
+          }, 500)
+        } else {
+          setAuthError('No account found with this email.')
+        }
       } else if (error.code === 'auth/wrong-password') {
         setAuthError('Incorrect password')
       } else {
@@ -175,8 +207,23 @@ export default function Home() {
             </p>
             
             {authError && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-700 text-sm font-medium">{authError}</p>
+              <div className={`mt-4 p-4 rounded-lg border ${
+                authError.includes('Switching') 
+                  ? 'bg-blue-50 border-blue-200' 
+                  : 'bg-red-50 border-red-200'
+              }`}>
+                <p className={`text-sm font-medium ${
+                  authError.includes('Switching') 
+                    ? 'text-blue-700' 
+                    : 'text-red-700'
+                }`}>
+                  {authError}
+                </p>
+                {authError.includes('Account exists') && (
+                  <p className="text-xs mt-2 text-gray-600">
+                    Tip: Use the same password you created when you first signed up.
+                  </p>
+                )}
               </div>
             )}
           </div>
