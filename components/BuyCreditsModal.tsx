@@ -23,17 +23,28 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
     
     setLoading(packId)
     try {
-      const response = await fetch('/api/create-checkout-session', {
+      // Get the pack details
+      const pack = CREDIT_PACKS.find(p => p.id === packId)
+      if (!pack) throw new Error('Pack not found')
+      
+      // Get Firebase auth token
+      const token = await user.getIdToken()
+      
+      const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          packId,
-          userId: user.uid,
-          userEmail: user.email,
+          priceId: pack.priceId || `price_${packId}`, // Use pack's Stripe price ID
+          credits: pack.credits,
         }),
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
 
       const { sessionId } = await response.json()
       const stripe = await stripePromise
