@@ -45,7 +45,7 @@ async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
   const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket.remoteAddress
   console.log(`Webhook ${event.type} from IP: ${clientIP}`)
 
-  // Handle successful payment
+  // Handle successful payment for one-time credit purchases
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
@@ -64,9 +64,9 @@ async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
       const success = await serverAddCredits(userId, creditsToAdd, amountPaid)
       
       if (success) {
-        console.log(`Added ${creditsToAdd} credits to user ${userId}`)
+        console.log(`✅ Added ${creditsToAdd} credits to user ${userId} for $${amountPaid}`)
       } else {
-        console.error(`Failed to add credits to user ${userId}`)
+        console.error(`❌ Failed to add credits to user ${userId}`)
         return res.status(500).json({ error: 'Failed to add credits' })
       }
     } catch (error) {
@@ -75,17 +75,10 @@ async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
     }
   }
 
-  // Handle subscription created (for monthly plans)
-  if (event.type === 'customer.subscription.created') {
-    const subscription = event.data.object as Stripe.Subscription
-    console.log('New subscription created:', subscription.id)
-  }
-
-  // Handle subscription cancelled
-  if (event.type === 'customer.subscription.deleted') {
-    const subscription = event.data.object as Stripe.Subscription
-    console.log('Subscription cancelled:', subscription.id)
-    // Note: Don't remove existing credits, just stop adding new ones
+  // Handle successful payment intent (backup for payment mode)
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent
+    console.log('✅ Payment succeeded:', paymentIntent.id)
   }
 
   res.status(200).json({ received: true })

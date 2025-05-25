@@ -68,8 +68,8 @@ async function checkoutHandler(req: NextApiRequest, res: NextApiResponse) {
           quantity: 1,
         },
       ],
-      mode: 'subscription',
-      success_url: `${req.headers.origin}/?success=true`,
+      mode: 'payment',
+      success_url: `${req.headers.origin}/?success=true&credits=${credits}`,
       cancel_url: `${req.headers.origin}/?cancelled=true`,
       metadata: {
         userId: userId,

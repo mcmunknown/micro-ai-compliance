@@ -133,7 +133,7 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
                           </div>
                           <div className="text-right">
                             <div className="text-3xl font-bold">${pack.price}</div>
-                            <div className="text-sm text-gray-400">{pack.credits} credits/month</div>
+                            <div className="text-sm text-gray-400">{pack.credits} credits</div>
                           </div>
                         </div>
 
@@ -142,7 +142,7 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
                         <div className="flex-1 space-y-3 mb-6">
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Check className="w-4 h-4 text-green-500" />
-                            <span>{pack.credits} scans available monthly</span>
+                            <span>{pack.credits} credits added instantly</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Check className="w-4 h-4 text-green-500" />
@@ -150,7 +150,7 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
                           </div>
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Check className="w-4 h-4 text-green-500" />
-                            <span>Cancel anytime</span>
+                            <span>Credits never expire</span>
                           </div>
                         </div>
 
@@ -173,7 +173,7 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
                 <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-sm text-blue-800 text-center">
                     <strong>🔒 Secure Payment:</strong> All transactions are processed securely through Stripe. 
-                    Credits refresh monthly. Cancel anytime from your Stripe dashboard.
+                    Credits are added instantly after payment and never expire.
                   </p>
                 </div>
               </div>

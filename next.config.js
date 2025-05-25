@@ -1,12 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  
-  // 🛡️ SECURITY: Comprehensive security headers
+  // Environment variables that should be available to the client
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
+  // Image optimization settings
+  images: {
+    domains: ['images.unsplash.com', 'firebasestorage.googleapis.com'],
+    formats: ['image/webp', 'image/avif'],
+  },
+  // Security headers
   async headers() {
     return [
       {
-        // Apply security headers to all routes
         source: '/(.*)',
         headers: [
           {
@@ -18,57 +25,27 @@ const nextConfig = {
             value: 'nosniff'
           },
           {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
-          },
-          {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin'
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), payment=()'
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains; preload'
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com https://identitytoolkit.googleapis.com https://firestore.googleapis.com https://firebase.googleapis.com https://securetoken.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com; frame-src https://js.stripe.com;"
-          }
-        ]
-      },
-      {
-        // Additional headers for API routes
-        source: '/api/(.*)',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: process.env.NODE_ENV === 'production' 
-              ? 'https://micro-ai-compliance.vercel.app' 
-              : 'http://localhost:3000'
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'POST, OPTIONS'
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization'
-          },
-          {
-            key: 'Access-Control-Allow-Credentials',
-            value: 'true'
-          },
-          {
-            key: 'X-Robots-Tag',
-            value: 'noindex, nofollow'
+            value: 'payment=*, microphone=(), camera=(), geolocation=(), browsing-topics=()'
           }
         ]
       }
     ]
-  }
+  },
+  // Redirect configuration
+  async redirects() {
+    return [
+      {
+        source: '/docs',
+        destination: '/documentation',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
