@@ -4,16 +4,14 @@ import { useAuth } from '@/components/AuthProvider'
 import PayNowButton from '@/components/PayNowButton'
 import DocumentUpload from '@/components/DocumentUpload'
 import LandingPage from '@/components/LandingPage'
+import AuthForm from '@/components/AuthForm'
 
 export default function Home() {
-  const { user, signInWithEmail, signUpWithEmail, signInWithGoogle, logout } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [authError, setAuthError] = useState('')
+  const { user, logout } = useAuth()
   const [hasPaid, setHasPaid] = useState(false)
   const [hasUsedDemo, setHasUsedDemo] = useState(false)
   const [showAuthForm, setShowAuthForm] = useState(false)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const router = useRouter()
 
   useEffect(() => {
@@ -30,83 +28,6 @@ export default function Home() {
     }
   }, [router.query])
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setAuthError('')
-    
-    try {
-      if (isSignUp) {
-        await signUpWithEmail(email, password)
-      } else {
-        await signInWithEmail(email, password)
-      }
-    } catch (error: any) {
-      console.error('Auth error:', error)
-      if (error.code === 'auth/operation-not-allowed') {
-        setAuthError('Email/password sign in is not enabled. Please enable it in Firebase Console.')
-      } else if (error.code === 'auth/invalid-email') {
-        setAuthError('Invalid email address')
-      } else if (error.code === 'auth/weak-password') {
-        setAuthError('Password should be at least 6 characters')
-      } else if (error.code === 'auth/email-already-in-use') {
-        setAuthError('This email is already registered. Switching to sign in...')
-        setIsSignUp(false)
-        // Try to sign in automatically
-        setTimeout(async () => {
-          try {
-            await signInWithEmail(email, password)
-          } catch (signInError: any) {
-            if (signInError.code === 'auth/wrong-password') {
-              setAuthError('Account exists. Please enter your password to sign in.')
-            } else if (signInError.code === 'auth/invalid-credential') {
-              setAuthError('Account exists but password is incorrect.')
-            } else {
-              setAuthError('Account exists. Please sign in with your password.')
-            }
-          }
-        }, 500)
-      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        if (!isSignUp) {
-          setAuthError('No account found. Creating a new account...')
-          setIsSignUp(true)
-          // Try to sign up automatically
-          setTimeout(async () => {
-            try {
-              await signUpWithEmail(email, password)
-            } catch (signUpError: any) {
-              if (signUpError.code === 'auth/weak-password') {
-                setAuthError('Please use a stronger password (at least 6 characters)')
-              } else {
-                setAuthError('Ready to create your account. Click Sign Up.')
-              }
-            }
-          }, 500)
-        } else {
-          setAuthError('No account found with this email.')
-        }
-      } else if (error.code === 'auth/wrong-password') {
-        setAuthError('Incorrect password')
-      } else {
-        setAuthError(error.message || 'Authentication failed')
-      }
-    }
-  }
-
-  const handleGoogleAuth = async () => {
-    setAuthError('')
-    try {
-      await signInWithGoogle()
-    } catch (error: any) {
-      console.error('Google auth error:', error)
-      if (error.code === 'auth/operation-not-allowed') {
-        setAuthError('Google sign in is not enabled. Please enable it in Firebase Console.')
-      } else if (error.code === 'auth/popup-blocked') {
-        setAuthError('Popup blocked. Please allow popups for this site.')
-      } else {
-        setAuthError(error.message || 'Google sign-in failed')
-      }
-    }
-  }
 
   if (!user) {
     if (!showAuthForm) {
@@ -114,121 +35,21 @@ export default function Home() {
         <LandingPage 
           onSignIn={() => {
             setShowAuthForm(true)
-            setIsSignUp(false)
+            setAuthMode('signin')
           }}
           onSignUp={() => {
             setShowAuthForm(true)
-            setIsSignUp(true)
+            setAuthMode('signup')
           }}
         />
       )
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4">
-        <div className="max-w-md mx-auto">
-          <button
-            onClick={() => setShowAuthForm(false)}
-            className="mb-4 text-gray-600 hover:text-gray-800 flex items-center gap-2"
-          >
-            ← Back to home
-          </button>
-          
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              {isSignUp ? 'Create Your Account' : 'Welcome Back'}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              {isSignUp 
-                ? 'Start with a free demo scan, then unlock unlimited access for just $10' 
-                : 'Sign in to access your compliance scanner'}
-            </p>
-            
-            <form onSubmit={handleEmailAuth} className="space-y-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-              >
-                {isSignUp ? 'Sign Up for Free Demo' : 'Sign In'}
-              </button>
-            </form>
-            
-            <div className="relative mb-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleGoogleAuth}
-              className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors mb-4"
-            >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-              Continue with Google
-            </button>
-            
-            <p className="text-center text-sm text-gray-600">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-              <button
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-blue-600 hover:underline ml-1 font-medium"
-              >
-                {isSignUp ? 'Sign In' : 'Sign Up'}
-              </button>
-            </p>
-            
-            {authError && (
-              <div className={`mt-4 p-4 rounded-lg border ${
-                authError.includes('Switching') 
-                  ? 'bg-blue-50 border-blue-200' 
-                  : 'bg-red-50 border-red-200'
-              }`}>
-                <p className={`text-sm font-medium ${
-                  authError.includes('Switching') 
-                    ? 'text-blue-700' 
-                    : 'text-red-700'
-                }`}>
-                  {authError}
-                </p>
-                {authError.includes('Account exists') && (
-                  <p className="text-xs mt-2 text-gray-600">
-                    Tip: Use the same password you created when you first signed up.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <AuthForm 
+        initialMode={authMode}
+        onBack={() => setShowAuthForm(false)}
+      />
     )
   }
 
