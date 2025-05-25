@@ -53,13 +53,13 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
     }
   }
 
-  const packIcons = {
+  const packIcons: Record<string, React.ReactNode> = {
     starter: <Zap className="w-6 h-6" />,
     professional: <TrendingUp className="w-6 h-6" />,
     business: <Building2 className="w-6 h-6" />
   }
 
-  const packColors = {
+  const packColors: Record<string, string> = {
     starter: 'from-blue-500 to-cyan-500',
     professional: 'from-purple-500 to-pink-500',
     business: 'from-orange-500 to-red-500'

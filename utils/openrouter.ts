@@ -145,17 +145,11 @@ For each pattern identified:
 ## 📊 RISK ASSESSMENT MATRIX
 
 ### Risk Heat Map
-```
-         Impact →
-    Low    Medium    High    Critical
-U  ┌─────┬───────┬────────┬──────────┐
-r  │  3  │   2   │   5    │    1     │ Low
-g  ├─────┼───────┼────────┼──────────┤
-e  │  1  │   4   │   3    │    2     │ Medium
-n  ├─────┼───────┼────────┼──────────┤
-c  │  0  │   2   │   6    │    4     │ High
-y  └─────┴───────┴────────┴──────────┘
-```
+| Impact/Urgency | Low | Medium | High | Critical |
+|----------------|-----|--------|------|----------|
+| Low Urgency    |  3  |   2    |   5  |    1     |
+| Medium Urgency |  1  |   4    |   3  |    2     |
+| High Urgency   |  0  |   2    |   6  |    4     |
 
 ### Top 10 Risks Ranked
 1. [Risk]: Impact $[X], Probability [Y]%, Timeline [Z]
@@ -211,12 +205,10 @@ y  └─────┴───────┴────────┴─�
 - **Settlement Authority**: $[recommended range]
 
 ### Timeline & Milestones
-```
-Week 1: [Actions]
-Week 2-4: [Actions]
-Month 2-3: [Actions]
-Month 4-6: [Actions]
-```
+- **Week 1**: [Actions]
+- **Week 2-4**: [Actions]
+- **Month 2-3**: [Actions]
+- **Month 4-6**: [Actions]
 
 ## 👥 PROFESSIONAL SERVICES REQUIRED
 

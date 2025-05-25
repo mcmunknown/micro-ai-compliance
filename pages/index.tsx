@@ -93,7 +93,6 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <CreditsDisplay 
-                credits={userCredits?.credits || 0} 
                 onBuyCredits={() => setShowBuyCredits(true)}
               />
               <div className="w-px h-6 bg-gray-300" />
