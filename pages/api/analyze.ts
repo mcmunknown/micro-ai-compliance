@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { analyzeDocument } from '@/utils/openrouter'
-import { serverCanUserScan, serverDeductCredits, SCAN_TYPES } from '@/utils/firebase-admin'
+import { analyzeDocumentStructured } from '@/utils/openrouter'
+import { serverCanUserScan, serverDeductCredits, SCAN_TYPES, storeAnalysisMetadata } from '@/utils/firebase-admin'
+import { isValidAnalysisResult, generateScanId, AuditAnalysisResult } from '@/utils/types/analysis'
 import { getAuth } from 'firebase-admin/auth'
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { withRateLimit, scanLimiter } from '@/middleware/rateLimiter'
@@ -97,19 +98,100 @@ async function analyzeHandler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(403).json({ error: reason })
     }
 
-    // Process the document analysis
-    const analysis = await analyzeDocument(sanitizedText, scanType as keyof typeof SCAN_TYPES)
+    // Process the document analysis with structured format
+    console.log(`Starting structured analysis for user ${userId}, scan type: ${scanType}`)
+    const structuredAnalysis = await analyzeDocumentStructured(
+      sanitizedText, 
+      scanType as keyof typeof SCAN_TYPES
+    )
     
+    // 🔒 VALIDATION: Validate the structured response
+    if (!isValidAnalysisResult(structuredAnalysis)) {
+      console.error('Invalid analysis result structure received from AI')
+      return res.status(500).json({ 
+        error: 'Analysis failed - invalid response format. Please try again.' 
+      })
+    }
+
+    // 🔒 SECURITY: Additional validation of critical fields
+    if (structuredAnalysis.summary.auditRiskScore < 0 || structuredAnalysis.summary.auditRiskScore > 100) {
+      console.error('Invalid audit risk score:', structuredAnalysis.summary.auditRiskScore)
+      return res.status(500).json({ 
+        error: 'Analysis failed - invalid risk assessment. Please try again.' 
+      })
+    }
+
+    // 🔒 VALIDATION: Ensure red flags have valid data
+    for (const flag of structuredAnalysis.redFlags) {
+      if (!flag.id || !flag.issue || !flag.penalty || typeof flag.penalty.amount !== 'number') {
+        console.error('Invalid red flag structure:', flag)
+        return res.status(500).json({ 
+          error: 'Analysis failed - invalid red flag data. Please try again.' 
+        })
+      }
+    }
+
     // 🔒 SECURITY: Deduct credits ONLY after successful processing (SERVER-SIDE)
     const success = await serverDeductCredits(userId, scanType as keyof typeof SCAN_TYPES, documentName)
     if (!success) {
       return res.status(500).json({ error: 'Failed to deduct credits' })
     }
+
+    // Generate a unique scan ID for this analysis
+    const scanId = generateScanId()
     
-    res.status(200).json({ analysis })
-  } catch (error) {
+    // Store scan metadata for history
+    try {
+      await storeAnalysisMetadata(userId, {
+        scanId,
+        documentName,
+        scanType,
+        timestamp: new Date(),
+        riskScore: structuredAnalysis.summary.auditRiskScore,
+        redFlagsCount: structuredAnalysis.redFlags.length,
+        complianceScore: structuredAnalysis.summary.complianceScore,
+        estimatedPenalties: structuredAnalysis.summary.estimatedPenalties.likely
+      })
+    } catch (historyError) {
+      // Don't fail the analysis if history storage fails
+      console.error('Failed to store scan history:', historyError)
+    }
+    
+    console.log(`Analysis completed successfully for user ${userId}, scan ID: ${scanId}`)
+    
+    // Return structured analysis result
+    res.status(200).json({ 
+      analysis: structuredAnalysis,
+      scanId,
+      scanType,
+      timestamp: new Date().toISOString(),
+      success: true
+    })
+  } catch (error: any) {
     console.error('Analysis error:', error)
-    res.status(500).json({ error: 'Failed to analyze document' })
+    
+    // Provide different error messages based on error type
+    if (error.message?.includes('JSON')) {
+      return res.status(500).json({ 
+        error: 'Analysis service returned invalid data. Please try again with a simpler document or different scan type.',
+        retryable: true
+      })
+    } else if (error.message?.includes('timeout')) {
+      return res.status(504).json({ 
+        error: 'Analysis timed out. Please try again with a shorter document.',
+        retryable: true
+      })
+    } else if (error.message?.includes('rate limit')) {
+      return res.status(429).json({ 
+        error: 'Too many requests. Please wait a moment before trying again.',
+        retryable: true
+      })
+    } else {
+      return res.status(500).json({ 
+        error: 'Failed to analyze document. Please try again.',
+        retryable: true
+      })
+    }
   }
 }
 

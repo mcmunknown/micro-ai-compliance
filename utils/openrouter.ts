@@ -1,8 +1,397 @@
 import { SCAN_TYPES } from './credits'
+import { AuditAnalysisResult, isValidAnalysisResult, generateRedFlagId } from './types/analysis'
 
-const SCAN_PROMPTS = {
+const STRUCTURED_PROMPTS = {
   basic: {
-    prompt: `You are an AI tax compliance expert. Analyze this document for ATO/IRS compliance risks.
+    systemPrompt: `You are an ATO/IRS audit risk analyzer. Return ONLY valid JSON matching this exact structure. Do not include any other text, explanations, or markdown:
+
+{
+  "summary": {
+    "auditRiskScore": <number 0-100>,
+    "auditProbability": "<number>% chance of audit",
+    "riskLevel": "<LOW|MEDIUM|HIGH|CRITICAL>",
+    "estimatedPenalties": {
+      "minimum": <number>,
+      "maximum": <number>,
+      "likely": <number>
+    },
+    "complianceScore": <number 0-100>
+  },
+  "redFlags": [
+    {
+      "id": "<unique_id>",
+      "severity": "<LOW|MEDIUM|HIGH|CRITICAL>",
+      "type": "<CASH_THRESHOLD|MISSING_REPORT|GST_MISMATCH|INCOME_SPIKE|DEDUCTION_ANOMALY>",
+      "originalText": "<exact text from document>",
+      "issue": "<specific problem description>",
+      "taxCodeViolation": "<specific tax code section>",
+      "penalty": {
+        "amount": <number>,
+        "calculation": "<how penalty was calculated>",
+        "statutory": "<law reference>"
+      },
+      "fix": {
+        "action": "<specific action to fix>",
+        "deadline": "<ISO date string>",
+        "form": "<form number if applicable>"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "<IMMEDIATE|URGENT|MEDIUM|LOW>",
+      "action": "<specific action>",
+      "reason": "<why this is needed>",
+      "deadline": "<ISO date string if applicable>",
+      "estimatedTime": "<time to complete>",
+      "difficulty": "<EASY|MODERATE|COMPLEX>",
+      "professionalRequired": <true|false>
+    }
+  ],
+  "timeline": [
+    {
+      "id": "<unique_id>",
+      "title": "<task title>",
+      "description": "<task description>",
+      "deadline": "<ISO date string>",
+      "priority": "<IMMEDIATE|URGENT|MEDIUM|LOW>",
+      "status": "PENDING",
+      "estimatedTime": "<time estimate>",
+      "relatedRedFlag": "<red flag id if applicable>"
+    }
+  ],
+  "requiredForms": [
+    {
+      "formNumber": "<form number>",
+      "name": "<form name>",
+      "deadline": "<ISO date string>",
+      "penalty": <number>,
+      "description": "<what this form is for>",
+      "filingMethod": "<ONLINE|PAPER|BOTH>"
+    }
+  ]
+}`,
+    userPrompt: `Analyze this document for ATO/IRS audit risks. Focus on:
+- Cash transactions over $10,000 (AUSTRAC/FinCEN reporting)
+- Unexplained income changes >20%
+- Missing required reports
+- GST/Sales tax mismatches
+- International transfers
+- Unusual deduction patterns
+
+Document content:
+{text}`
+  },
+  deep: {
+    systemPrompt: `You are a senior tax compliance auditor. Return ONLY valid JSON matching this exact structure. Provide detailed forensic analysis:
+
+{
+  "summary": {
+    "auditRiskScore": <number 0-100>,
+    "auditProbability": "<number>% chance of audit within 2 years",
+    "riskLevel": "<LOW|MEDIUM|HIGH|CRITICAL>",
+    "estimatedPenalties": {
+      "minimum": <number>,
+      "maximum": <number>,
+      "likely": <number>
+    },
+    "complianceScore": <number 0-100>
+  },
+  "redFlags": [
+    {
+      "id": "<unique_id>",
+      "severity": "<LOW|MEDIUM|HIGH|CRITICAL>",
+      "type": "<detailed violation type>",
+      "originalText": "<exact problematic text>",
+      "issue": "<specific compliance violation>",
+      "taxCodeViolation": "<specific code section with details>",
+      "penalty": {
+        "amount": <calculated penalty amount>,
+        "calculation": "<detailed penalty calculation>",
+        "statutory": "<complete legal reference>"
+      },
+      "fix": {
+        "action": "<detailed remediation steps>",
+        "deadline": "<ISO date string>",
+        "form": "<specific form needed>"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "<IMMEDIATE|URGENT|MEDIUM|LOW>",
+      "action": "<detailed specific action>",
+      "reason": "<detailed justification>",
+      "deadline": "<ISO date string if applicable>",
+      "estimatedTime": "<detailed time estimate>",
+      "difficulty": "<EASY|MODERATE|COMPLEX>",
+      "professionalRequired": <true|false>
+    }
+  ],
+  "timeline": [
+    {
+      "id": "<unique_id>",
+      "title": "<detailed task title>",
+      "description": "<comprehensive task description>",
+      "deadline": "<ISO date string>",
+      "priority": "<IMMEDIATE|URGENT|MEDIUM|LOW>",
+      "status": "PENDING",
+      "estimatedTime": "<detailed time estimate>",
+      "relatedRedFlag": "<red flag id if applicable>"
+    }
+  ],
+  "requiredForms": [
+    {
+      "formNumber": "<complete form number>",
+      "name": "<full official form name>",
+      "deadline": "<ISO date string>",
+      "penalty": <specific penalty amount>,
+      "description": "<detailed explanation of form purpose>",
+      "filingMethod": "<ONLINE|PAPER|BOTH>"
+    }
+  ]
+}`,
+    userPrompt: `Perform detailed forensic analysis of this document for tax compliance. Examine:
+- All cash transactions and reporting requirements
+- Income patterns and anomalies
+- Deduction legitimacy and documentation
+- International compliance obligations
+- Related party transactions
+- Industry-specific regulations
+
+Document content:
+{text}`
+  },
+  ultra: {
+    systemPrompt: `You are a forensic tax compliance expert. Return ONLY valid JSON with comprehensive analysis:
+
+{
+  "summary": {
+    "auditRiskScore": <number 0-100>,
+    "auditProbability": "<number>% probability of audit selection",
+    "riskLevel": "<LOW|MEDIUM|HIGH|CRITICAL>",
+    "estimatedPenalties": {
+      "minimum": <conservative estimate>,
+      "maximum": <worst case scenario>,
+      "likely": <most probable outcome>
+    },
+    "complianceScore": <number 0-100>
+  },
+  "redFlags": [
+    {
+      "id": "<unique_id>",
+      "severity": "<LOW|MEDIUM|HIGH|CRITICAL>",
+      "type": "<comprehensive violation category>",
+      "originalText": "<exact problematic text with context>",
+      "issue": "<detailed compliance violation explanation>",
+      "taxCodeViolation": "<complete legal citation with subsections>",
+      "penalty": {
+        "amount": <precisely calculated penalty>,
+        "calculation": "<step-by-step penalty calculation>",
+        "statutory": "<complete legal authority and precedent>"
+      },
+      "fix": {
+        "action": "<comprehensive remediation strategy>",
+        "deadline": "<ISO date string with legal basis>",
+        "form": "<all required forms and amendments>"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "<IMMEDIATE|URGENT|MEDIUM|LOW>",
+      "action": "<comprehensive strategic action>",
+      "reason": "<detailed risk analysis and justification>",
+      "deadline": "<ISO date string if applicable>",
+      "estimatedTime": "<detailed professional time estimate>",
+      "difficulty": "<EASY|MODERATE|COMPLEX>",
+      "professionalRequired": <true|false>
+    }
+  ],
+  "timeline": [
+    {
+      "id": "<unique_id>",
+      "title": "<strategic milestone title>",
+      "description": "<comprehensive action description>",
+      "deadline": "<ISO date string>",
+      "priority": "<IMMEDIATE|URGENT|MEDIUM|LOW>",
+      "status": "PENDING",
+      "estimatedTime": "<professional time estimate>",
+      "relatedRedFlag": "<red flag id if applicable>"
+    }
+  ],
+  "requiredForms": [
+    {
+      "formNumber": "<complete form designation>",
+      "name": "<full official form title>",
+      "deadline": "<ISO date string with statutory basis>",
+      "penalty": <specific penalty with interest>,
+      "description": "<comprehensive form purpose and requirements>",
+      "filingMethod": "<ONLINE|PAPER|BOTH>"
+    }
+  ]
+}`,
+    userPrompt: `Conduct comprehensive forensic tax compliance analysis suitable for board-level reporting:
+- Complete transaction-level review
+- Statistical anomaly detection
+- Multi-jurisdiction compliance assessment
+- Criminal vs civil risk evaluation
+- Audit defense strategy requirements
+- Professional service needs assessment
+
+Document content:
+{text}`
+  }
+}
+
+export async function analyzeDocumentStructured(
+  text: string, 
+  scanType: keyof typeof SCAN_TYPES = 'basic'
+): Promise<AuditAnalysisResult> {
+  try {
+    const scanConfig = STRUCTURED_PROMPTS[scanType]
+    const userPrompt = scanConfig.userPrompt.replace('{text}', text)
+    
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://micro-ai-compliance.vercel.app',
+        'X-Title': 'Micro AI Compliance Scanner'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-sonnet',
+        messages: [
+          {
+            role: 'system',
+            content: scanConfig.systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ],
+        max_tokens: scanType === 'basic' ? 2000 : scanType === 'deep' ? 4000 : 6000,
+        temperature: 0.1, // Lower temperature for more consistent JSON
+        response_format: { type: "json_object" } // Force JSON response
+      })
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('OpenRouter API error:', error)
+      throw new Error('Failed to analyze document')
+    }
+
+    const data = await response.json()
+    let analysisResult = data.choices[0].message.content
+
+    // Parse JSON response
+    let parsedResult: any
+    try {
+      parsedResult = JSON.parse(analysisResult)
+    } catch (parseError) {
+      console.error('JSON parsing failed:', parseError)
+      console.error('Raw response:', analysisResult)
+      throw new Error('AI returned invalid JSON format')
+    }
+
+    // Generate unique IDs for red flags and timeline items if missing
+    if (parsedResult.redFlags) {
+      parsedResult.redFlags = parsedResult.redFlags.map((flag: any) => ({
+        ...flag,
+        id: flag.id || generateRedFlagId(),
+        fix: {
+          ...flag.fix,
+          deadline: new Date(flag.fix.deadline)
+        }
+      }))
+    }
+
+    if (parsedResult.timeline) {
+      parsedResult.timeline = parsedResult.timeline.map((item: any) => ({
+        ...item,
+        id: item.id || generateRedFlagId(),
+        deadline: new Date(item.deadline)
+      }))
+    }
+
+    if (parsedResult.recommendations) {
+      parsedResult.recommendations = parsedResult.recommendations.map((rec: any) => ({
+        ...rec,
+        deadline: rec.deadline ? new Date(rec.deadline) : undefined
+      }))
+    }
+
+    if (parsedResult.requiredForms) {
+      parsedResult.requiredForms = parsedResult.requiredForms.map((form: any) => ({
+        ...form,
+        deadline: new Date(form.deadline)
+      }))
+    }
+
+    // Validate the structured response
+    if (!isValidAnalysisResult(parsedResult)) {
+      console.error('Invalid analysis result structure:', parsedResult)
+      throw new Error('AI returned invalid analysis structure')
+    }
+
+    return parsedResult as AuditAnalysisResult
+  } catch (error) {
+    console.error('Structured analysis error:', error)
+    throw new Error('Failed to analyze document with structured format')
+  }
+}
+
+// Keep the legacy function for backward compatibility during transition
+export async function analyzeDocument(text: string, scanType: keyof typeof SCAN_TYPES = 'basic'): Promise<string> {
+  // For now, call the structured version and convert back to text
+  // This will be removed once all components are updated
+  try {
+    const structuredResult = await analyzeDocumentStructured(text, scanType)
+    
+    // Convert structured result back to markdown for legacy compatibility
+    let markdown = `# Compliance Analysis Report\n\n`
+    markdown += `## 🎯 Risk Score: ${structuredResult.summary.auditRiskScore}/100\n`
+    markdown += `**Audit Risk Level**: ${structuredResult.summary.riskLevel}\n`
+    markdown += `**Audit Probability**: ${structuredResult.summary.auditProbability}\n`
+    markdown += `**Compliance Score**: ${structuredResult.summary.complianceScore}%\n\n`
+    
+    if (structuredResult.redFlags.length > 0) {
+      markdown += `## 🚩 Critical Red Flags\n`
+      structuredResult.redFlags.forEach((flag, idx) => {
+        markdown += `### ${idx + 1}. ${flag.issue}\n`
+        markdown += `- **Severity**: ${flag.severity}\n`
+        markdown += `- **Violation**: ${flag.taxCodeViolation}\n`
+        markdown += `- **Potential Penalty**: $${flag.penalty.amount.toLocaleString()}\n`
+        markdown += `- **Action Required**: ${flag.fix.action}\n\n`
+      })
+    }
+
+    if (structuredResult.recommendations.length > 0) {
+      markdown += `## 💡 Recommendations\n`
+      structuredResult.recommendations.forEach((rec, idx) => {
+        markdown += `### ${idx + 1}. ${rec.action}\n`
+        markdown += `- **Priority**: ${rec.priority}\n`
+        markdown += `- **Time Required**: ${rec.estimatedTime}\n`
+        markdown += `- **Difficulty**: ${rec.difficulty}\n\n`
+      })
+    }
+
+    return markdown
+  } catch (error) {
+    // Fallback to original analysis if structured fails
+    console.error('Structured analysis failed, falling back to original:', error)
+    return analyzeDocumentLegacy(text, scanType)
+  }
+}
+
+// Legacy analysis function (original implementation)
+async function analyzeDocumentLegacy(text: string, scanType: keyof typeof SCAN_TYPES = 'basic'): Promise<string> {
+  const SCAN_PROMPTS = {
+    basic: {
+      prompt: `You are an AI tax compliance expert. Analyze this document for ATO/IRS compliance risks.
 
 Provide a concise report with:
 
@@ -29,10 +418,10 @@ Keep it concise and actionable. Use clear business language.
 
 Document content:
 {text}`,
-    maxTokens: 1000
-  },
-  deep: {
-    prompt: `You are a senior tax compliance auditor. Perform a detailed forensic analysis of this document for ATO/IRS compliance.
+      maxTokens: 1000
+    },
+    deep: {
+      prompt: `You are a senior tax compliance auditor. Perform a detailed forensic analysis of this document for ATO/IRS compliance.
 
 ## 📊 Executive Summary
 ### Overall Risk Assessment: [X/10]
@@ -85,10 +474,10 @@ Review all financial entries and flag:
 
 Document content:
 {text}`,
-    maxTokens: 3000
-  },
-  ultra: {
-    prompt: `You are a forensic tax compliance expert preparing a comprehensive audit defense package. Analyze this document with the depth required for board-level reporting and legal proceedings.
+      maxTokens: 3000
+    },
+    ultra: {
+      prompt: `You are a forensic tax compliance expert preparing a comprehensive audit defense package. Analyze this document with the depth required for board-level reporting and legal proceedings.
 
 # 🏢 COMPREHENSIVE TAX COMPLIANCE AUDIT REPORT
 
@@ -249,11 +638,10 @@ For each pattern identified:
 
 Document content:
 {text}`,
-    maxTokens: 5000
+      maxTokens: 5000
+    }
   }
-}
 
-export async function analyzeDocument(text: string, scanType: keyof typeof SCAN_TYPES = 'basic'): Promise<string> {
   try {
     const scanConfig = SCAN_PROMPTS[scanType]
     const prompt = scanConfig.prompt.replace('{text}', text)
@@ -286,7 +674,7 @@ export async function analyzeDocument(text: string, scanType: keyof typeof SCAN_
     const data = await response.json()
     return data.choices[0].message.content
   } catch (error) {
-    console.error('OpenRouter analysis error:', error)
+    console.error('Legacy OpenRouter analysis error:', error)
     throw new Error('Failed to analyze document')
   }
 }

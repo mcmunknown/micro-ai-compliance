@@ -13,6 +13,26 @@ service cloud.firestore {
       allow write: if false;
     }
     
+    // Scan history collection - READ ONLY for users, SERVER WRITES ONLY
+    match /scanHistory/{scanId} {
+      // Users can only read their own scan history
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // NO CLIENT WRITES - only server-side Admin SDK can create/modify/delete
+      // This prevents users from manipulating their scan history
+      allow write: if false;
+    }
+    
+    // Form templates collection - PUBLIC READ for authenticated users
+    match /formTemplates/{formId} {
+      // Authenticated users can read form templates
+      allow read: if request.auth != null;
+      
+      // NO CLIENT WRITES - only admins can manage form templates
+      allow write: if false;
+    }
+    
     // Default deny all other collections
     match /{document=**} {
       allow read, write: if false;
