@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import Stripe from 'stripe'
 import { serverAddCredits } from '@/utils/firebase-admin'
 import { buffer } from 'micro'
+import { withRateLimit, strictLimiter } from '@/middleware/rateLimiter'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-04-30.basil',
@@ -14,7 +15,7 @@ export const config = {
   },
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -39,6 +40,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Webhook signature verification failed:', error)
     return res.status(400).json({ error: 'Invalid signature' })
   }
+
+  // 🛡️ SECURITY: Log webhook events
+  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket.remoteAddress
+  console.log(`Webhook ${event.type} from IP: ${clientIP}`)
 
   // Handle successful payment
   if (event.type === 'checkout.session.completed') {
@@ -84,4 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   res.status(200).json({ received: true })
-} 
+}
+
+// 🛡️ SECURITY: Apply strict rate limiting for webhooks (10 requests per minute per IP)
+export default withRateLimit(strictLimiter, webhookHandler) 

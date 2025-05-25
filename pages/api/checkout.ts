@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import Stripe from 'stripe'
 import { getAuth } from 'firebase-admin/auth'
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { withRateLimit, apiLimiter } from '@/middleware/rateLimiter'
 
 // Initialize Firebase Admin SDK
 if (!getApps().length) {
@@ -18,7 +19,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-04-30.basil',
 })
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function checkoutHandler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -46,6 +47,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Price ID and credits amount required' })
   }
 
+  // 🛡️ SECURITY: Log checkout attempt
+  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket.remoteAddress
+  console.log(`Checkout attempt from user ${userId}, IP: ${clientIP}, credits: ${credits}`)
+
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -70,3 +75,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ error: 'Failed to create checkout session' })
   }
 }
+
+// 🛡️ SECURITY: Apply API rate limiting (100 requests per 15 minutes per IP)
+export default withRateLimit(apiLimiter, checkoutHandler)
