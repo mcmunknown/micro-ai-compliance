@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User credits collection - users can only access their own documents
+    match /userCredits/{userId} {
+      // Allow read/write only if the authenticated user's UID matches the document ID
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 
