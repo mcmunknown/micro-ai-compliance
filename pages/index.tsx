@@ -57,16 +57,163 @@ export default function Home() {
   if (!user) {
     if (!showAuthForm) {
       return (
-        <LandingPage 
-          onSignIn={() => {
-            setShowAuthForm(true)
-            setAuthMode('signin')
-          }}
-          onSignUp={() => {
-            setShowAuthForm(true)
-            setAuthMode('signup')
-          }}
-        />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+          {/* Navigation */}
+          <nav className="absolute top-0 w-full z-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center py-6">
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold text-gray-900">TaxScanner</span>
+                  <span className="ml-2 text-xs font-medium text-primary-600 bg-primary-50 px-2 py-1 rounded-full">AI</span>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowAuthForm(true)
+                    setAuthMode('signin')
+                  }}
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                >
+                  Sign In
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          {/* Hero Section */}
+          <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="animate-fade-in">
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 tracking-tight">
+                  Worried About an
+                  <span className="block text-red-600">ATO Audit?</span>
+                </h1>
+                <p className="mt-6 text-xl sm:text-2xl text-gray-700 max-w-3xl mx-auto">
+                  <span className="font-semibold">One small mistake</span> in your tax documents could trigger months of investigations, 
+                  <span className="text-red-600 font-semibold">$10,000s in penalties</span>, and sleepless nights wondering if you missed something.
+                </p>
+              </div>
+              
+              <div className="mt-10 animate-slide-up">
+                <button
+                  onClick={() => {
+                    setShowAuthForm(true)
+                    setAuthMode('signup')
+                  }}
+                  className="bg-primary-600 hover:bg-primary-700 text-white font-semibold text-lg px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-[1.02]"
+                >
+                  Start Free Demo →
+                </button>
+                <p className="mt-4 text-sm text-gray-500">
+                  No credit card required • 3 free scans
+                </p>
+              </div>
+
+              {/* Trust Indicators */}
+              <div className="mt-16 flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 text-gray-500">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span>
+                  <span className="text-sm font-medium">No data stored</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-500">🔒</span>
+                  <span className="text-sm font-medium">Bank-level security</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-purple-500">👥</span>
+                  <span className="text-sm font-medium">1000+ users</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Pain Agitation Section */}
+          <section className="py-20 bg-red-50">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+                The Hidden Triggers Tax Offices Look For
+              </h2>
+              <div className="grid md:grid-cols-2 gap-8 mb-16">
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-red-100">
+                  <div className="flex items-start mb-4">
+                    <span className="text-2xl mr-3">⚠️</span>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Cash Transactions Over $10,000</h3>
+                      <p className="text-gray-600">
+                        Missing AUSTRAC reports? That's an automatic red flag and potential 
+                        <span className="font-semibold text-red-600"> $222,000 fine per transaction</span>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-red-100">
+                  <div className="flex items-start mb-4">
+                    <span className="text-2xl mr-3">🚨</span>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Unexplained Income Spikes</h3>
+                      <p className="text-gray-600">
+                        Revenue jumped 300%? Without proper documentation, expect a 
+                        <span className="font-semibold text-red-600"> full lifestyle audit</span>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-red-100">
+                  <div className="flex items-start mb-4">
+                    <span className="text-2xl mr-3">💸</span>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Offshore Transfers</h3>
+                      <p className="text-gray-600">
+                        Every international payment is tracked. One missing declaration means 
+                        <span className="font-semibold text-red-600"> 75% penalty on unpaid tax</span>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-red-100">
+                  <div className="flex items-start mb-4">
+                    <span className="text-2xl mr-3">📊</span>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Mismatched GST Claims</h3>
+                      <p className="text-gray-600">
+                        Your claims don't match suppliers' reports? That's 
+                        <span className="font-semibold text-red-600"> instant audit territory</span>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center bg-gray-900 text-white rounded-2xl p-8">
+                <p className="text-xl mb-2">
+                  <span className="font-bold">87% of businesses</span> have at least one of these red flags
+                </p>
+                <p className="text-gray-300">
+                  Most don't know until the audit letter arrives
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* CTA Section */}
+          <section className="py-20">
+            <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Sleep Better Tonight
+              </h2>
+              <p className="text-xl text-gray-600 mb-8">
+                Don't wait for that audit letter. Know exactly where you stand in 30 seconds.
+              </p>
+              <button
+                onClick={() => {
+                  setShowAuthForm(true)
+                  setAuthMode('signup')
+                }}
+                className="bg-primary-600 hover:bg-primary-700 text-white font-semibold text-lg px-8 py-4 rounded-xl transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+              >
+                Get Started Free →
+              </button>
+            </div>
+          </section>
+        </div>
       )
     }
 
