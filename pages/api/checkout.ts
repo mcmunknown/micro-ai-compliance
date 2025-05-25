@@ -48,16 +48,24 @@ async function checkoutHandler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   // Check if this is a fallback price ID (not a real Stripe price)
-  if (priceId.startsWith('price_') && !priceId.startsWith('price_1')) {
+  if (priceId.startsWith('price_1OExample')) {
     return res.status(400).json({ 
-      error: 'Stripe price IDs not configured. Please contact support.',
-      details: 'The payment system is not fully configured. Please try again later or contact support.'
+      error: 'Stripe subscription price IDs not configured. Please contact support.',
+      details: 'The payment system requires valid subscription price IDs. Please configure STRIPE_PRICE environment variables.'
     })
   }
 
   // 🛡️ SECURITY: Log checkout attempt
   const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket.remoteAddress
-  console.log(`Checkout attempt from user ${userId}, IP: ${clientIP}, credits: ${credits}`)
+  console.log(`Checkout attempt from user ${userId}, IP: ${clientIP}, credits: ${credits}, priceId: ${priceId}`)
+
+  // Debug Stripe configuration
+  console.log('Stripe configuration check:', {
+    hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
+    secretKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10) + '...',
+    priceId,
+    origin: req.headers.origin
+  })
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -68,7 +76,7 @@ async function checkoutHandler(req: NextApiRequest, res: NextApiResponse) {
           quantity: 1,
         },
       ],
-      mode: 'payment',
+      mode: 'subscription',
       success_url: `${req.headers.origin}/?success=true&credits=${credits}`,
       cancel_url: `${req.headers.origin}/?cancelled=true`,
       metadata: {
@@ -79,8 +87,19 @@ async function checkoutHandler(req: NextApiRequest, res: NextApiResponse) {
 
     res.status(200).json({ sessionId: session.id })
   } catch (error) {
-    console.error('Stripe error:', error)
-    res.status(500).json({ error: 'Failed to create checkout session' })
+    const stripeError = error as any
+    console.error('Stripe checkout error details:', {
+      error: stripeError.message || String(error),
+      type: stripeError.type,
+      code: stripeError.code,
+      priceId,
+      userId,
+      credits
+    })
+    res.status(500).json({ 
+      error: 'Failed to create checkout session',
+      details: stripeError.message || String(error)
+    })
   }
 }
 

@@ -45,9 +45,15 @@ async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
   const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket.remoteAddress
   console.log(`Webhook ${event.type} from IP: ${clientIP}`)
 
-  // Handle successful payment for one-time credit purchases
+  // Handle successful subscription checkout (initial payment + credits)
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
+
+    // Only process subscription checkouts
+    if (session.mode !== 'subscription') {
+      console.log('Ignoring non-subscription checkout:', session.id)
+      return res.status(200).json({ received: true })
+    }
 
     // 🔒 SECURITY: Only process if we have required metadata
     if (!session.metadata?.userId || !session.metadata?.credits) {
@@ -64,21 +70,68 @@ async function webhookHandler(req: NextApiRequest, res: NextApiResponse) {
       const success = await serverAddCredits(userId, creditsToAdd, amountPaid)
       
       if (success) {
-        console.log(`✅ Added ${creditsToAdd} credits to user ${userId} for $${amountPaid}`)
+        console.log(`✅ Added ${creditsToAdd} monthly credits to user ${userId} for $${amountPaid}`)
       } else {
         console.error(`❌ Failed to add credits to user ${userId}`)
         return res.status(500).json({ error: 'Failed to add credits' })
       }
     } catch (error) {
-      console.error('Error processing payment webhook:', error)
+      console.error('Error processing subscription checkout webhook:', error)
       return res.status(500).json({ error: 'Internal server error' })
     }
   }
 
-  // Handle successful payment intent (backup for payment mode)
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object as Stripe.PaymentIntent
-    console.log('✅ Payment succeeded:', paymentIntent.id)
+  // Handle subscription creation (initial setup)
+  if (event.type === 'customer.subscription.created') {
+    const subscription = event.data.object as Stripe.Subscription
+    console.log('✅ New subscription created:', subscription.id)
+  }
+
+  // Handle monthly subscription renewal (add credits each month)
+  if (event.type === 'invoice.payment_succeeded') {
+    const invoice = event.data.object as any // Use any to access subscription property
+    
+    // Only process subscription invoices (not one-time payments)
+    if (invoice.subscription && invoice.billing_reason === 'subscription_cycle') {
+      try {
+        // Retrieve the subscription to get metadata
+        const subscriptionId = typeof invoice.subscription === 'string' 
+          ? invoice.subscription 
+          : invoice.subscription.id
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        
+        // Get checkout session to find original metadata
+        const sessions = await stripe.checkout.sessions.list({
+          subscription: subscription.id,
+          limit: 1
+        })
+        
+        if (sessions.data.length > 0) {
+          const originalSession = sessions.data[0]
+          const userId = originalSession.metadata?.userId
+          const creditsToAdd = parseInt(originalSession.metadata?.credits || '0')
+          
+          if (userId && creditsToAdd > 0) {
+            const success = await serverAddCredits(userId, creditsToAdd, (invoice.amount_paid || 0) / 100)
+            
+            if (success) {
+              console.log(`✅ Monthly renewal: Added ${creditsToAdd} credits to user ${userId}`)
+            } else {
+              console.error(`❌ Failed to add monthly credits to user ${userId}`)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error processing monthly renewal:', error)
+      }
+    }
+  }
+
+  // Handle subscription cancelled
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object as Stripe.Subscription
+    console.log('⚠️ Subscription cancelled:', subscription.id)
+    // Note: Don't remove existing credits, just stop adding new ones
   }
 
   res.status(200).json({ received: true })
