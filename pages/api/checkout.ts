@@ -47,6 +47,14 @@ async function checkoutHandler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: 'Price ID and credits amount required' })
   }
 
+  // Check if this is a fallback price ID (not a real Stripe price)
+  if (priceId.startsWith('price_') && !priceId.startsWith('price_1')) {
+    return res.status(400).json({ 
+      error: 'Stripe price IDs not configured. Please contact support.',
+      details: 'The payment system is not fully configured. Please try again later or contact support.'
+    })
+  }
+
   // 🛡️ SECURITY: Log checkout attempt
   const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket.remoteAddress
   console.log(`Checkout attempt from user ${userId}, IP: ${clientIP}, credits: ${credits}`)

@@ -43,7 +43,14 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        const errorData = await response.json().catch(() => ({}))
+        
+        if (response.status === 400 && errorData.error?.includes('Stripe price IDs not configured')) {
+          alert('Payment system is not fully configured yet. Please try again later or contact support.')
+          return
+        }
+        
+        throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`)
       }
 
       const { sessionId } = await response.json()

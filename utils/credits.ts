@@ -31,20 +31,20 @@ export const CREDIT_PACKS: CreditPack[] = [
     id: 'starter',
     credits: 10,
     price: 10,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_10_CREDITS!,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_10_CREDITS || 'price_starter_10_credits',
   },
   {
     id: 'professional',
     credits: 50,
     price: 40,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_50_CREDITS!,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_50_CREDITS || 'price_professional_50_credits',
     popular: true,
   },
   {
     id: 'business',
     credits: 200,
     price: 120,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_200_CREDITS!,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_200_CREDITS || 'price_business_200_credits',
   },
 ]
 
