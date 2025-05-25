@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth'
 import { auth, googleProvider } from '@/utils/firebase'
+import { initializeUserCredits } from '@/utils/credits'
 
 interface AuthContextType {
   user: User | null
@@ -35,7 +36,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = async (email: string, password: string) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      // Initialize free credits for new user
+      await initializeUserCredits(userCredential.user.uid)
     } catch (error) {
       throw error
     }
@@ -43,7 +46,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider)
+      const result = await signInWithPopup(auth, googleProvider)
+      // Check if this is a new user and initialize credits
+      const isNewUser = result.user.metadata.creationTime === result.user.metadata.lastSignInTime
+      if (isNewUser) {
+        await initializeUserCredits(result.user.uid)
+      }
     } catch (error) {
       throw error
     }

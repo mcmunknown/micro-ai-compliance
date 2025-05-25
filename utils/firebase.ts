@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getAnalytics, isSupported } from 'firebase/analytics'
+import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: "AIzaSyC6PTbwjl62uezvy5vbftYLKWyMBouraZg",
@@ -14,6 +15,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
+export const db = getFirestore(app)
 export const googleProvider = new GoogleAuthProvider()
 
 // Initialize Analytics only in browser environment

@@ -5,6 +5,9 @@ import PayNowButton from '@/components/PayNowButton'
 import DocumentUpload from '@/components/DocumentUpload'
 import LandingPage from '@/components/LandingPage'
 import AuthForm from '@/components/AuthForm'
+import CreditsDisplay from '@/components/CreditsDisplay'
+import BuyCreditsModal from '@/components/BuyCreditsModal'
+import { getUserCredits, addCredits, UserCredits } from '@/utils/credits'
 
 export default function Home() {
   const { user, logout } = useAuth()
@@ -12,6 +15,8 @@ export default function Home() {
   const [hasUsedDemo, setHasUsedDemo] = useState(false)
   const [showAuthForm, setShowAuthForm] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
+  const [showBuyCredits, setShowBuyCredits] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -26,7 +31,27 @@ export default function Home() {
     if (localStorage.getItem('hasUsedDemo') === 'true') {
       setHasUsedDemo(true)
     }
+    
+    // Handle successful payment redirect
+    if (router.query.payment === 'success' && router.query.credits) {
+      const creditsAdded = parseInt(router.query.credits as string)
+      // Show success message
+      alert(`Success! ${creditsAdded} credits have been added to your account.`)
+      // Clean up URL
+      router.replace('/', undefined, { shallow: true })
+    }
   }, [router.query])
+  
+  // Fetch user credits
+  useEffect(() => {
+    async function fetchCredits() {
+      if (user) {
+        const credits = await getUserCredits(user.uid)
+        setUserCredits(credits)
+      }
+    }
+    fetchCredits()
+  }, [user])
 
 
   if (!user) {
@@ -53,7 +78,7 @@ export default function Home() {
     )
   }
 
-  const isDemoMode = !hasPaid && !hasUsedDemo
+  const isDemoMode = false // Removed demo mode - now using credit system
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -65,18 +90,13 @@ export default function Home() {
               <h1 className="text-2xl font-bold text-gray-900">
                 AI Tax Compliance Scanner
               </h1>
-              {hasPaid && (
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                  PRO
-                </span>
-              )}
-              {isDemoMode && (
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                  DEMO MODE
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-4">
+              <CreditsDisplay 
+                credits={userCredits?.credits || 0} 
+                onBuyCredits={() => setShowBuyCredits(true)}
+              />
+              <div className="w-px h-6 bg-gray-300" />
               <span className="text-sm text-gray-600">{user.email}</span>
               <button
                 onClick={logout}
@@ -113,71 +133,61 @@ export default function Home() {
           </span>
         </div>
         
-        {router.query.cancelled === 'true' && (
+        {router.query.payment === 'cancelled' && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-yellow-800">
-              Payment was cancelled. Complete your purchase to unlock unlimited scans.
+              Payment was cancelled. You can try again when you're ready.
             </p>
           </div>
         )}
         
-        {/* Demo Mode Notice */}
-        {isDemoMode && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-1">🎁 Free Demo Mode</h3>
-            <p className="text-blue-700 text-sm">
-              You can scan one document for free! After your demo scan, upgrade for just $10 to unlock:
-            </p>
-            <ul className="mt-2 text-sm text-blue-700 list-disc list-inside">
-              <li>Unlimited document scans</li>
-              <li>Full detailed compliance reports</li>
-              <li>Lifetime access - no subscriptions</li>
-            </ul>
-          </div>
-        )}
-
-        {/* After Demo Used */}
-        {hasUsedDemo && !hasPaid && (
+        {/* Credit System Notice */}
+        {userCredits && userCredits.credits === 0 && (
           <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-            <div className="text-6xl mb-4">🎯</div>
+            <div className="text-6xl mb-4">💳</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Demo Scan Complete!
+              No Credits Available
             </h2>
             <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              You've used your free demo scan. Unlock unlimited scans and full reports for just $10 - one time payment, lifetime access.
+              Purchase credits to continue scanning documents for compliance risks.
             </p>
-            <PayNowButton />
+            <button
+              onClick={() => setShowBuyCredits(true)}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Buy Credits
+            </button>
             <p className="mt-4 text-sm text-gray-500">
-              No subscriptions • Instant access • 100% secure payment via Stripe
+              Starting at just $10 for 10 credits • Secure payment via Stripe
             </p>
           </div>
         )}
         
-        {/* Paid User View */}
-        {hasPaid && (
+        {/* Main Document Upload */}
+        {userCredits && userCredits.credits > 0 && (
           <div>
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
-              <div>
-                <p className="text-green-800 font-medium">✅ Full Access Unlocked!</p>
-                <p className="text-green-600 text-sm">Scan unlimited documents with detailed compliance reports.</p>
+            {userCredits.freeCreditsUsed && userCredits.credits <= 3 && (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="text-amber-800 font-medium">⚠️ Low Credits</p>
+                  <p className="text-amber-600 text-sm">You have {userCredits.credits} credit{userCredits.credits !== 1 ? 's' : ''} remaining.</p>
+                </div>
+                <button
+                  onClick={() => setShowBuyCredits(true)}
+                  className="text-amber-700 text-sm font-medium hover:text-amber-800"
+                >
+                  Buy More →
+                </button>
               </div>
-              <div className="text-green-700 text-sm font-medium">
-                Lifetime Access
-              </div>
-            </div>
-            <DocumentUpload isDemo={false} onDemoUsed={() => {}} />
+            )}
+            <DocumentUpload 
+              userCredits={userCredits}
+              onCreditsUpdated={async () => {
+                const credits = await getUserCredits(user!.uid)
+                setUserCredits(credits)
+              }}
+            />
           </div>
-        )}
-
-        {/* Demo Mode Document Upload */}
-        {isDemoMode && (
-          <DocumentUpload 
-            isDemo={true} 
-            onDemoUsed={() => {
-              setHasUsedDemo(true)
-              localStorage.setItem('hasUsedDemo', 'true')
-            }}
-          />
         )}
       </main>
 
@@ -192,6 +202,12 @@ export default function Home() {
           </p>
         </div>
       </footer>
+      
+      {/* Buy Credits Modal */}
+      <BuyCreditsModal 
+        isOpen={showBuyCredits}
+        onClose={() => setShowBuyCredits(false)}
+      />
     </div>
   )
 }
