@@ -69,8 +69,8 @@ function generateRedFlagInstructions(flag: RedFlag, daysLeft: number, urgencyLev
     urgencyLevel: urgencyLevel as any,
     steps: generateRedFlagSteps(flag),
     commonMistakes: getCommonMistakes(flag.type),
-    helpPhone: '1-800-TAX-HELP',
-    helpCost: '$49 for 30 minutes'
+    helpPhone: '13 28 61',
+    helpCost: '$99 for 30 minutes'
   }
 }
 
@@ -85,8 +85,8 @@ function generateFormInstructions(form: RequiredForm, daysLeft: number, urgencyL
     urgencyLevel: urgencyLevel as any,
     steps: generateFormSteps(form),
     commonMistakes: getFormCommonMistakes(form.formNumber),
-    helpPhone: '1-800-TAX-HELP',
-    helpCost: '$49 for 30 minutes'
+    helpPhone: '13 28 61',
+    helpCost: '$99 for 30 minutes'
   }
 }
 
@@ -101,8 +101,8 @@ function generateRecommendationInstructions(rec: Recommendation, daysLeft: numbe
     urgencyLevel: urgencyLevel as any,
     steps: generateRecommendationSteps(rec),
     commonMistakes: getRecommendationMistakes(rec.action),
-    helpPhone: '1-800-TAX-HELP',
-    helpCost: '$49 for 30 minutes'
+    helpPhone: '13 28 61',
+    helpCost: '$99 for 30 minutes'
   }
 }
 
@@ -113,29 +113,29 @@ function generateRedFlagSteps(flag: RedFlag): DetailedInstructions['steps'] {
     steps.push(
       {
         number: 1,
-        action: 'Download Form 8300',
-        description: 'Get the Currency Transaction Report form from IRS',
-        timeRequired: '2 minutes',
-        downloadLink: '/forms/form-8300.pdf'
+        action: 'Report to AUSTRAC immediately',
+        description: 'Log into AUSTRAC Online to submit Threshold Transaction Report (TTR)',
+        timeRequired: '5 minutes',
+        onlineFilingUrl: 'https://www.austrac.gov.au/business/how-comply-and-report-guidance-and-resources/reporting/austrac-online'
       },
       {
         number: 2,
         action: 'Gather transaction details',
-        description: 'Collect all information about the cash transaction: date, amount, payer details, reason for payment',
+        description: 'Collect all information about the cash transaction: date, amount ($10,000+ AUD), customer details, ID verification',
         timeRequired: '15 minutes'
       },
       {
         number: 3,
-        action: 'Complete Form 8300',
-        description: 'Fill out all required fields using the transaction information you gathered',
+        action: 'Complete TTR form online',
+        description: 'Fill out all required fields in AUSTRAC Online system',
         timeRequired: '20 minutes'
       },
       {
         number: 4,
-        action: 'File online or mail',
-        description: 'Submit the completed form within 15 days of the transaction',
-        timeRequired: '5 minutes',
-        onlineFilingUrl: 'https://www.irs.gov/filing/e-file-form-8300'
+        action: 'Submit within 10 business days',
+        description: 'Must be reported within 10 business days or face penalties up to $222,000',
+        timeRequired: '2 minutes',
+        onlineFilingUrl: 'https://www.austrac.gov.au/business/how-comply-and-report-guidance-and-resources/reporting/austrac-online'
       }
     )
   } else if (flag.type === 'GST_MISMATCH') {
@@ -251,10 +251,10 @@ function generateRecommendationSteps(rec: Recommendation): DetailedInstructions[
 function getCommonMistakes(flagType: string): string[] {
   const mistakes: Record<string, string[]> = {
     'CASH_THRESHOLD': [
-      'Not filing within 15 days of the transaction',
-      'Failing to get complete customer identification',
-      'Reporting the wrong transaction amount',
-      'Missing required business information'
+      'Not reporting within 10 business days to AUSTRAC',
+      'Failing to verify customer ID (100 point check)',
+      'Reporting amounts below $10,000 AUD threshold',
+      'Not keeping required records for 7 years'
     ],
     'GST_MISMATCH': [
       'Not keeping proper GST records',
@@ -280,17 +280,23 @@ function getCommonMistakes(flagType: string): string[] {
 
 function getFormCommonMistakes(formNumber: string): string[] {
   const mistakes: Record<string, string[]> = {
-    'Form 8300': [
-      'Not filing within 15 days',
-      'Incomplete customer information',
-      'Wrong transaction classification',
-      'Missing business details'
+    'BAS': [
+      'Missing the 28th of month deadline',
+      'Incorrect GST calculations',
+      'Wrong PAYG withholding amounts',
+      'Not reporting all business income'
     ],
-    'Form 941': [
-      'Incorrect payroll calculations',
-      'Missing quarterly deadlines',
-      'Wrong deposit schedules',
-      'Incomplete employee information'
+    'TTR': [
+      'Not reporting within 10 business days',
+      'Missing customer ID verification',
+      'Incorrect transaction details',
+      'Not using AUSTRAC Online'
+    ],
+    'AUSTRAC TTR': [
+      'Delaying report beyond 10 business days',
+      'Incomplete customer information',
+      'Wrong transaction amount',
+      'Not keeping verification records'
     ]
   }
   
@@ -313,11 +319,12 @@ function getRecommendationMistakes(action: string): string[] {
 
 function getOnlineFilingUrl(formNumber: string): string {
   const urls: Record<string, string> = {
-    'Form 8300': 'https://www.irs.gov/filing/e-file-form-8300',
-    'Form 941': 'https://www.irs.gov/employment-taxes/e-file-form-941',
-    'Form 1040': 'https://www.irs.gov/e-file-providers/before-starting-free-file-fillable-forms',
-    'Form 1120': 'https://www.irs.gov/e-file-providers/modernized-e-file-mef-information'
+    'BAS': 'https://www.ato.gov.au/business/business-activity-statements-bas/lodging-and-paying-your-bas/',
+    'TTR': 'https://www.austrac.gov.au/business/how-comply-and-report-guidance-and-resources/reporting/austrac-online',
+    'AUSTRAC TTR': 'https://www.austrac.gov.au/business/how-comply-and-report-guidance-and-resources/reporting/austrac-online',
+    'PAYG Summary': 'https://www.ato.gov.au/business/single-touch-payroll/',
+    'Tax Return': 'https://my.gov.au/'
   }
   
-  return urls[formNumber] || 'https://www.irs.gov/filing/e-file-a-return'
+  return urls[formNumber] || 'https://www.ato.gov.au/lodgment'
 } 

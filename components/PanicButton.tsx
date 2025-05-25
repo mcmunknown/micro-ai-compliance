@@ -34,10 +34,10 @@ export default function PanicButton() {
                 <Phone className="w-8 h-8 text-red-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                TALK TO TAX EXPERT NOW
+                TALK TO AUSTRALIAN TAX EXPERT NOW
               </h2>
               <p className="text-gray-600">
-                Stop panicking. Get answers. Fix it together.
+                Stop panicking. Get ATO-compliant advice. Fix it together.
               </p>
             </div>
 
@@ -45,16 +45,16 @@ export default function PanicButton() {
               <div className="flex items-start gap-3">
                 <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Available 24/7</p>
-                  <p className="text-sm text-gray-600">Experts standing by right now</p>
+                  <p className="font-semibold">Available Mon-Fri 8am-6pm AEST</p>
+                  <p className="text-sm text-gray-600">Australian tax professionals ready to help</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <DollarSign className="w-5 h-5 text-green-600 mt-0.5" />
                 <div>
-                  <p className="font-semibold">$49 for 30 minutes</p>
-                  <p className="text-sm text-gray-600">Most issues resolved in one call</p>
+                  <p className="font-semibold">$99 for 30 minutes</p>
+                  <p className="text-sm text-gray-600">ATO-experienced advisors</p>
                 </div>
               </div>
 
@@ -62,7 +62,7 @@ export default function PanicButton() {
                 <Shield className="w-5 h-5 text-purple-600 mt-0.5" />
                 <div>
                   <p className="font-semibold">100% Confidential</p>
-                  <p className="text-sm text-gray-600">Licensed tax professionals</p>
+                  <p className="text-sm text-gray-600">Registered Australian tax agents</p>
                 </div>
               </div>
             </div>
@@ -72,25 +72,25 @@ export default function PanicButton() {
                 They'll help you with:
               </p>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>✓ Understanding what went wrong</li>
-                <li>✓ Filing corrections immediately</li>
-                <li>✓ Dealing with penalties & notices</li>
-                <li>✓ Preventing future problems</li>
+                <li>✓ Understanding ATO compliance requirements</li>
+                <li>✓ Lodging corrections via myGov/ATO portal</li>
+                <li>✓ Dealing with ATO penalties & notices</li>
+                <li>✓ Avoiding AUSTRAC reporting issues</li>
               </ul>
             </div>
 
             <div className="space-y-3">
               <a
-                href="tel:1-800-TAX-HELP"
+                href="tel:132861"
                 className="block w-full bg-red-600 hover:bg-red-700 text-white rounded-lg py-3 font-bold text-center transition-colors"
               >
-                📞 CALL NOW: 1-800-TAX-HELP
+                📞 CALL ATO: 13 28 61
               </a>
 
               <button
                 onClick={() => {
                   // In a real app, this would open a chat widget
-                  alert('Chat feature coming soon! Please call 1-800-TAX-HELP for immediate assistance.')
+                  alert('Chat feature coming soon! Please call 13 28 61 for ATO assistance.')
                 }}
                 className="block w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-bold text-center transition-colors flex items-center justify-center gap-2"
               >

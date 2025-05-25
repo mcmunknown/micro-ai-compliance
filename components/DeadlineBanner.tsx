@@ -118,10 +118,10 @@ export default function DeadlineBanner() {
             </button>
             
             <a 
-              href="tel:1-800-TAX-HELP" 
+              href="tel:132861" 
               className="bg-green-500 text-white px-4 py-1.5 rounded-lg font-semibold hover:bg-green-600 transition-colors text-sm flex items-center gap-2"
             >
-              GET HELP
+              CALL ATO
             </a>
           </div>
         </div>

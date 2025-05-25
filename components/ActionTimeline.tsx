@@ -453,9 +453,12 @@ export default function ActionTimeline({ recommendations }: ActionTimelineProps)
                             <p className="text-sm text-green-700">Call our expert at {detailedInstructions[taskId].helpPhone}</p>
                             <p className="text-xs text-green-600">{detailedInstructions[taskId].helpCost}</p>
                           </div>
-                          <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2">
+                          <button 
+                            onClick={() => window.open('tel:132861', '_self')}
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
+                          >
                             <Phone className="w-5 h-5" />
-                            CALL TAX EXPERT NOW
+                            CALL ATO EXPERT
                           </button>
                         </div>
                       </div>
