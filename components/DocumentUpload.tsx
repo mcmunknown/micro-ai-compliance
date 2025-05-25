@@ -2,7 +2,9 @@ import { useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { useAuth } from '@/components/AuthProvider'
 import { SCAN_TYPES, canUserScan, deductCredits, UserCredits } from '@/utils/credits'
+import { AuditAnalysisResult } from '@/utils/types/analysis'
 import { FileText, Zap, TrendingUp, Building2, Upload, AlertCircle } from 'lucide-react'
+import AnalysisResults from './AnalysisResults'
 
 // Dynamically import PDF.js to avoid SSR issues
 const loadPdfjs = () => import('pdfjs-dist').then(pdfjs => {
@@ -15,11 +17,19 @@ interface DocumentUploadProps {
   onCreditsUpdated: () => void
 }
 
+interface AnalysisResponse {
+  analysis: AuditAnalysisResult
+  scanId: string
+  scanType: string
+  timestamp: string
+  success: boolean
+}
+
 export default function DocumentUpload({ userCredits, onCreditsUpdated }: DocumentUploadProps) {
   const { user } = useAuth()
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [analysis, setAnalysis] = useState<string>('')
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null)
   const [error, setError] = useState<string>('')
   const [scanType, setScanType] = useState<keyof typeof SCAN_TYPES>('basic')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -57,7 +67,7 @@ export default function DocumentUpload({ userCredits, onCreditsUpdated }: Docume
       if (validTypes.includes(selectedFile.type) || selectedFile.name.endsWith('.csv')) {
         setFile(selectedFile)
         setError('')
-        setAnalysis('')
+        setAnalysisResult(null) // Clear previous analysis
       } else {
         setError('Please select a PDF, TXT, or CSV file.')
         setFile(null)
@@ -70,7 +80,7 @@ export default function DocumentUpload({ userCredits, onCreditsUpdated }: Docume
 
     setLoading(true)
     setError('')
-    setAnalysis('')
+    setAnalysisResult(null)
 
     try {
       // Check if user can perform scan
@@ -85,24 +95,36 @@ export default function DocumentUpload({ userCredits, onCreditsUpdated }: Docume
         throw new Error('Document appears to be empty or too short to analyze.')
       }
 
+      // Get the ID token for authentication
+      const idToken = await user.getIdToken()
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
         },
-        body: JSON.stringify({ text, scanType }),
+        body: JSON.stringify({ 
+          text, 
+          scanType,
+          documentName: file.name,
+          fileType: file.type
+        }),
       })
 
       if (!response.ok) {
-        throw new Error('Analysis failed. Please try again.')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Analysis failed. Please try again.')
       }
 
-      const { analysis } = await response.json()
+      const analysisData: AnalysisResponse = await response.json()
       
-      // Deduct credits after successful scan
-      await deductCredits(user.uid, scanType, file.name)
+      // Validate the response structure
+      if (!analysisData.analysis || !analysisData.scanId) {
+        throw new Error('Invalid analysis response. Please try again.')
+      }
       
-      setAnalysis(analysis)
+      setAnalysisResult(analysisData)
       
       // Update credits display
       onCreditsUpdated()
@@ -112,10 +134,20 @@ export default function DocumentUpload({ userCredits, onCreditsUpdated }: Docume
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during analysis.')
+    } catch (err: any) {
+      console.error('Analysis error:', err)
+      setError(err.message || 'An error occurred during analysis.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleNewScan = () => {
+    setAnalysisResult(null)
+    setError('')
+    setFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
 
@@ -135,6 +167,31 @@ export default function DocumentUpload({ userCredits, onCreditsUpdated }: Docume
     basic: 'border-blue-500 bg-blue-100',
     deep: 'border-purple-500 bg-purple-100',
     ultra: 'border-orange-500 bg-orange-100'
+  }
+
+  // If we have analysis results, show them
+  if (analysisResult) {
+    return (
+      <div className="space-y-6">
+        {/* New Scan Button */}
+        <div className="bg-white rounded-lg shadow-sm p-4 text-center">
+          <button
+            onClick={handleNewScan}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            ← Start New Analysis
+          </button>
+        </div>
+
+        {/* Analysis Results */}
+        <AnalysisResults 
+          result={analysisResult.analysis}
+          scanType={analysisResult.scanType}
+          scanId={analysisResult.scanId}
+          timestamp={analysisResult.timestamp}
+        />
+      </div>
+    )
   }
 
   return (
@@ -198,6 +255,18 @@ export default function DocumentUpload({ userCredits, onCreditsUpdated }: Docume
             ))}
           </ul>
         </div>
+
+        {/* New Features Highlight */}
+        <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+          <h4 className="text-sm font-medium text-blue-800 mb-2">🎉 New! Visual Risk Dashboard</h4>
+          <ul className="text-xs text-blue-700 space-y-1">
+            <li>• Interactive risk assessment gauge</li>
+            <li>• Detailed red flags with penalty calculations</li>
+            <li>• Actionable timeline with deadlines</li>
+            <li>• Required forms with pre-fill data</li>
+            <li>• Professional recommendations</li>
+          </ul>
+        </div>
       </div>
 
       {/* File Upload */}
@@ -258,9 +327,14 @@ export default function DocumentUpload({ userCredits, onCreditsUpdated }: Docume
             <button
               onClick={handleUpload}
               disabled={loading || userCredits.credits < SCAN_TYPES[scanType].credits}
-              className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded transition-colors"
+              className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              {loading ? 'Analyzing...' : 'Analyze Document'}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Analyzing...
+                </div>
+              ) : 'Analyze Document'}
             </button>
           </div>
         </div>
@@ -273,34 +347,6 @@ export default function DocumentUpload({ userCredits, onCreditsUpdated }: Docume
             <p className="text-red-800 font-medium">Analysis Error</p>
             <p className="text-red-700 text-sm mt-1">{error}</p>
           </div>
-        </div>
-      )}
-
-      {analysis && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-2xl">📊</span>
-            <h3 className="text-lg font-bold text-gray-900">Compliance Analysis Report</h3>
-            <span className="ml-auto text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-              {SCAN_TYPES[scanType].name}
-            </span>
-          </div>
-          <div 
-            className="prose prose-sm max-w-none text-gray-700"
-            dangerouslySetInnerHTML={{ 
-              __html: analysis
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-900">$1</strong>')
-                .replace(/##\s(.*?)(<br>|$)/g, '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-900">$1</h3>')
-                .replace(/🚩/g, '<span class="text-red-500">🚩</span>')
-                .replace(/✅/g, '<span class="text-green-500">✅</span>')
-                .replace(/⚠️/g, '<span class="text-yellow-500">⚠️</span>')
-                .replace(/💰/g, '<span class="text-green-500">💰</span>')
-                .replace(/📄/g, '<span class="text-blue-500">📄</span>')
-                .replace(/🔒/g, '<span class="text-gray-500">🔒</span>')
-                .replace(/✨/g, '<span class="text-yellow-500">✨</span>')
-            }}
-          />
         </div>
       )}
     </div>

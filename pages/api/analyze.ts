@@ -143,7 +143,6 @@ async function analyzeHandler(req: NextApiRequest, res: NextApiResponse) {
     // Store scan metadata for history
     try {
       await storeAnalysisMetadata(userId, {
-        scanId,
         documentName,
         scanType,
         timestamp: new Date(),
