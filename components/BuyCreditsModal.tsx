@@ -83,16 +83,16 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
             className="fixed inset-0 flex items-center justify-center z-50 p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="relative p-6 border-b border-gray-800">
+            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="relative p-6 border-b border-gray-200">
                 <button
                   onClick={onClose}
-                  className="absolute right-4 top-4 p-2 rounded-lg hover:bg-gray-800 transition-colors"
+                  className="absolute right-4 top-4 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5 text-gray-500" />
                 </button>
-                <h2 className="text-2xl font-bold">Buy Credits</h2>
-                <p className="text-gray-400 mt-1">Choose the perfect credit pack for your compliance needs</p>
+                <h2 className="text-2xl font-bold text-gray-900">Buy Credits</h2>
+                <p className="text-gray-600 mt-1">Choose the perfect credit pack for your compliance needs</p>
               </div>
 
               <div className="p-6">
@@ -108,7 +108,7 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
                           MOST POPULAR
                         </div>
                       )}
-                      <div className="bg-gray-900 rounded-xl p-6 h-full flex flex-col">
+                      <div className="bg-white rounded-xl p-6 h-full flex flex-col border border-gray-200">
                         <div className="flex items-center justify-between mb-4">
                           <div className={`p-3 rounded-xl bg-gradient-to-br ${packColors[pack.id]} text-white`}>
                             {packIcons[pack.id]}
@@ -119,20 +119,20 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
                           </div>
                         </div>
 
-                        <h3 className="text-xl font-semibold mb-2 capitalize">{pack.id} Pack</h3>
+                        <h3 className="text-xl font-semibold mb-2 capitalize text-gray-900">{pack.id} Pack</h3>
                         
                         <div className="flex-1 space-y-3 mb-6">
-                          <div className="flex items-center gap-2 text-sm text-gray-300">
-                            <Check className="w-4 h-4 text-green-400" />
-                            <span>${(pack.price / pack.credits).toFixed(2)} per credit</span>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Check className="w-4 h-4 text-green-500" />
+                            <span>{pack.credits} scans available monthly</span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-300">
-                            <Check className="w-4 h-4 text-green-400" />
-                            <span>{Math.floor(pack.credits / 3)} deep scans</span>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Check className="w-4 h-4 text-green-500" />
+                            <span>All scan types included</span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-300">
-                            <Check className="w-4 h-4 text-green-400" />
-                            <span>Monthly subscription</span>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Check className="w-4 h-4 text-green-500" />
+                            <span>Cancel anytime</span>
                           </div>
                         </div>
 
@@ -152,10 +152,10 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
                   ))}
                 </div>
 
-                <div className="mt-8 p-4 bg-gray-800 rounded-lg">
-                  <p className="text-sm text-gray-300 text-center">
+                <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800 text-center">
                     <strong>🔒 Secure Payment:</strong> All transactions are processed securely through Stripe. 
-                    Credits are added monthly. Cancel anytime.
+                    Credits refresh monthly. Cancel anytime from your Stripe dashboard.
                   </p>
                 </div>
               </div>

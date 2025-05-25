@@ -14,6 +14,8 @@ export default function CreditsDisplay({ onBuyCredits }: CreditsDisplayProps) {
   useEffect(() => {
     if (user) {
       loadCredits()
+    } else {
+      setLoading(false)
     }
   }, [user])
 
@@ -25,6 +27,14 @@ export default function CreditsDisplay({ onBuyCredits }: CreditsDisplayProps) {
       setCredits(userCredits)
     } catch (error) {
       console.error('Error loading credits:', error)
+      // Set default credits on error
+      setCredits({
+        credits: 0,
+        freeCreditsUsed: true,
+        totalSpent: 0,
+        scansToday: 0,
+        scanHistory: []
+      })
     } finally {
       setLoading(false)
     }

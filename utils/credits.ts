@@ -88,14 +88,35 @@ export async function initializeUserCredits(userId: string) {
 
 // Get user's current credits
 export async function getUserCredits(userId: string): Promise<UserCredits | null> {
-  const userCreditsRef = doc(db, 'userCredits', userId)
-  const creditsDoc = await getDoc(userCreditsRef)
-  
-  if (!creditsDoc.exists()) {
-    return null
+  try {
+    const userCreditsRef = doc(db, 'userCredits', userId)
+    const creditsDoc = await getDoc(userCreditsRef)
+    
+    if (!creditsDoc.exists()) {
+      // Initialize credits if they don't exist
+      await initializeUserCredits(userId)
+      // Return default credits
+      return {
+        credits: 3,
+        freeCreditsUsed: true,
+        totalSpent: 0,
+        scansToday: 0,
+        scanHistory: []
+      }
+    }
+    
+    return creditsDoc.data() as UserCredits
+  } catch (error) {
+    console.error('Error getting user credits:', error)
+    // Return default credits on error
+    return {
+      credits: 3,
+      freeCreditsUsed: true,
+      totalSpent: 0,
+      scansToday: 0,
+      scanHistory: []
+    }
   }
-  
-  return creditsDoc.data() as UserCredits
 }
 
 // Check if user can perform scan
