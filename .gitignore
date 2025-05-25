@@ -1,33 +1,54 @@
-# Dependencies
-node_modules/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
 /.pnp
 .pnp.js
 
-# Production
+# testing
+/coverage
+
+# next.js
+/.next/
 /out/
 
-# Next.js
-/.next/
-.next
+# production
+/build
 
-# Environment variables
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+# 🔒 SECURITY: Never commit environment files containing secrets
+.env*
+!.env.example
+!.env.local.example
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# vercel
+.vercel
 
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
+# typescript
 *.tsbuildinfo
 next-env.d.ts
-.vercel
-.env*.local
+
+# 🔒 SECURITY: Additional sensitive files
+*.key
+*.pem
+*.p12
+*.pfx
+service-account-key.json
+firebase-admin-key.json
+
+# Backup files that might contain secrets
+*.backup
+*.bak
