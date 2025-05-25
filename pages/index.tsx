@@ -33,7 +33,22 @@ export default function Home() {
         await signInWithEmail(email, password)
       }
     } catch (error: any) {
-      setAuthError(error.message || 'Authentication failed')
+      console.error('Auth error:', error)
+      if (error.code === 'auth/operation-not-allowed') {
+        setAuthError('Email/password sign in is not enabled. Please enable it in Firebase Console.')
+      } else if (error.code === 'auth/invalid-email') {
+        setAuthError('Invalid email address')
+      } else if (error.code === 'auth/weak-password') {
+        setAuthError('Password should be at least 6 characters')
+      } else if (error.code === 'auth/email-already-in-use') {
+        setAuthError('Email already registered. Try signing in instead.')
+      } else if (error.code === 'auth/user-not-found') {
+        setAuthError('No account found with this email. Try signing up.')
+      } else if (error.code === 'auth/wrong-password') {
+        setAuthError('Incorrect password')
+      } else {
+        setAuthError(error.message || 'Authentication failed')
+      }
     }
   }
 
@@ -42,7 +57,14 @@ export default function Home() {
     try {
       await signInWithGoogle()
     } catch (error: any) {
-      setAuthError(error.message || 'Google sign-in failed')
+      console.error('Google auth error:', error)
+      if (error.code === 'auth/operation-not-allowed') {
+        setAuthError('Google sign in is not enabled. Please enable it in Firebase Console.')
+      } else if (error.code === 'auth/popup-blocked') {
+        setAuthError('Popup blocked. Please allow popups for this site.')
+      } else {
+        setAuthError(error.message || 'Google sign-in failed')
+      }
     }
   }
 
