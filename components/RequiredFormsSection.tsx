@@ -1,5 +1,5 @@
 import React from 'react'
-import { RequiredForm, calculateDaysUntilDeadline } from '@/utils/types/analysis'
+import { RequiredForm, calculateDaysUntilDeadline, ensureDate } from '@/utils/types/analysis'
 import { FileText, Calendar, DollarSign, Download, AlertTriangle, ExternalLink, Globe } from 'lucide-react'
 
 interface RequiredFormsSectionProps {
@@ -7,9 +7,11 @@ interface RequiredFormsSectionProps {
 }
 
 export default function RequiredFormsSection({ forms }: RequiredFormsSectionProps) {
-  const sortedForms = [...forms].sort((a, b) => 
-    new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-  )
+  const sortedForms = [...forms].sort((a, b) => {
+    const dateA = ensureDate(a.deadline)
+    const dateB = ensureDate(b.deadline)
+    return dateA.getTime() - dateB.getTime()
+  })
 
   const getFilingMethodIcon = (method: string) => {
     switch (method) {
@@ -80,7 +82,7 @@ export default function RequiredFormsSection({ forms }: RequiredFormsSectionProp
                             <span className="text-sm font-medium">Due Date</span>
                           </div>
                           <p className="font-bold text-blue-600">
-                            {new Date(form.deadline).toLocaleDateString()}
+                            {ensureDate(form.deadline).toLocaleDateString()}
                           </p>
                           <p className={`text-xs mt-1 ${
                             isOverdue ? 'text-red-600 font-semibold' :

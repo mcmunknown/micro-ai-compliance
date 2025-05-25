@@ -32,7 +32,7 @@ export interface RedFlag {
   }
   fix: {
     action: string
-    deadline: Date
+    deadline: Date | string
     form?: string
     template?: string
   }
@@ -42,7 +42,7 @@ export interface Recommendation {
   priority: 'IMMEDIATE' | 'URGENT' | 'MEDIUM' | 'LOW'
   action: string
   reason: string
-  deadline?: Date
+  deadline?: Date | string
   estimatedTime: string // "15 minutes"
   difficulty: 'EASY' | 'MODERATE' | 'COMPLEX'
   professionalRequired: boolean
@@ -52,7 +52,7 @@ export interface ComplianceTimeline {
   id: string
   title: string
   description: string
-  deadline: Date
+  deadline: Date | string
   priority: 'IMMEDIATE' | 'URGENT' | 'MEDIUM' | 'LOW'
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'OVERDUE'
   estimatedTime: string
@@ -62,7 +62,7 @@ export interface ComplianceTimeline {
 export interface RequiredForm {
   formNumber: string // "Form 8300"
   name: string
-  deadline: Date
+  deadline: Date | string
   penalty: number
   downloadUrl?: string
   prefillData?: Record<string, any>
@@ -75,7 +75,7 @@ export interface ScanMetadata {
   userId: string
   documentName: string
   scanType: string
-  timestamp: Date
+  timestamp: Date | string
   riskScore: number
   redFlagsCount: number
   complianceScore: number
@@ -138,8 +138,14 @@ export function generateScanId(): string {
   return `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
-export function calculateDaysUntilDeadline(deadline: Date): number {
-  return Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+// Safe date conversion utility
+export function ensureDate(date: Date | string): Date {
+  return date instanceof Date ? date : new Date(date)
+}
+
+export function calculateDaysUntilDeadline(deadline: Date | string): number {
+  const deadlineDate = ensureDate(deadline)
+  return Math.ceil((deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 }
 
 export function getRiskColor(riskLevel: string): string {

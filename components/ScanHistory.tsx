@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ScanMetadata } from '@/utils/types/analysis'
+import { ScanMetadata, ensureDate } from '@/utils/types/analysis'
 import { TrendingUp, TrendingDown, Calendar, FileText, AlertTriangle, DollarSign, BarChart3, Filter } from 'lucide-react'
 import AuditRiskGauge from './AuditRiskGauge'
 
@@ -92,7 +92,8 @@ export default function ScanHistory({ userId }: ScanHistoryProps) {
   }
 
   const filteredHistory = scanHistory.filter(scan => {
-    const daysAgo = (Date.now() - scan.timestamp.getTime()) / (1000 * 60 * 60 * 24)
+    const timestamp = ensureDate(scan.timestamp)
+    const daysAgo = (Date.now() - timestamp.getTime()) / (1000 * 60 * 60 * 24)
     switch (selectedPeriod) {
       case '7d': return daysAgo <= 7
       case '30d': return daysAgo <= 30
@@ -103,7 +104,11 @@ export default function ScanHistory({ userId }: ScanHistoryProps) {
 
   const sortedHistory = [...filteredHistory].sort((a, b) => {
     switch (sortBy) {
-      case 'date': return b.timestamp.getTime() - a.timestamp.getTime()
+      case 'date': {
+        const timestampA = ensureDate(a.timestamp)
+        const timestampB = ensureDate(b.timestamp)
+        return timestampB.getTime() - timestampA.getTime()
+      }
       case 'risk': return b.riskScore - a.riskScore
       case 'type': return a.scanType.localeCompare(b.scanType)
       default: return 0
@@ -290,7 +295,7 @@ export default function ScanHistory({ userId }: ScanHistoryProps) {
                     </div>
                     
                     <p className="text-sm text-gray-600 mb-3">
-                      Scanned on {scan.timestamp.toLocaleDateString()} at {scan.timestamp.toLocaleTimeString()}
+                      Scanned on {ensureDate(scan.timestamp).toLocaleDateString()} at {ensureDate(scan.timestamp).toLocaleTimeString()}
                     </p>
 
                     {/* Quick Stats */}
