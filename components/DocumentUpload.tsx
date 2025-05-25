@@ -1,8 +1,11 @@
 import { useState, useRef } from 'react'
-import * as pdfjs from 'pdfjs-dist'
+import dynamic from 'next/dynamic'
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
+// Dynamically import PDF.js to avoid SSR issues
+const loadPdfjs = () => import('pdfjs-dist').then(pdfjs => {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
+  return pdfjs
+})
 
 export default function DocumentUpload() {
   const [file, setFile] = useState<File | null>(null)
@@ -15,6 +18,7 @@ export default function DocumentUpload() {
     const fileType = file.type
 
     if (fileType === 'application/pdf') {
+      const pdfjs = await loadPdfjs()
       const arrayBuffer = await file.arrayBuffer()
       const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise
       let text = ''
