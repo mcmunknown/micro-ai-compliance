@@ -1,26 +1,110 @@
 import { RequiredForm } from './types/analysis'
 
-// ATO Form URLs - Real forms from Australian government sites
-const FORM_URLS: Record<string, string> = {
-  // Australian Tax Office Forms
-  'BAS': 'https://www.ato.gov.au/forms-and-instructions/business-activity-statement-bas',
-  'BAS F': 'https://www.ato.gov.au/forms/bas-f-quarterly-bas/',
-  'BAS P': 'https://www.ato.gov.au/forms-and-instructions/bas-p-annual-gst-return',
-  'BAS Q': 'https://www.ato.gov.au/forms-and-instructions/bas-q-annual-gst-report',
-  'GST Return': 'https://www.ato.gov.au/forms-and-instructions/approved-forms-consolidated-list-by-tax-topic/goods-and-services-tax-gst',
-  'PAYG Withholding': 'https://www.ato.gov.au/forms-and-instructions/payg-withholding',
-  'PAYG Summary': 'https://www.ato.gov.au/forms/payg-payment-summary-individual-non-business/',
-  'TFN Declaration': 'https://www.ato.gov.au/forms/tfn-declaration/',
-  'ABN Application': 'https://www.ato.gov.au/forms/abn-application/',
-  'Tax Return': 'https://www.ato.gov.au/individuals/lodging-your-tax-return/',
+// Form availability types
+export type FormAvailability = 'PDF' | 'ONLINE_ONLY' | 'LOGIN_REQUIRED'
+
+export interface FormInfo {
+  url: string
+  availability: FormAvailability
+  description?: string
+  portalUrl?: string
+}
+
+// ATO Form URLs - Updated May 2025 with working links
+const FORM_INFO: Record<string, FormInfo> = {
+  // BAS Forms - Most are sample PDFs only, real forms via portal
+  'BAS': {
+    url: 'https://www.ato.gov.au/forms-and-instructions/approved-forms-consolidated-list-by-tax-topic/business-activity-statements-bas',
+    availability: 'ONLINE_ONLY',
+    description: 'Lodge via ATO Business Portal or tax agent',
+    portalUrl: 'https://bp.ato.gov.au/'
+  },
+  'BAS A': {
+    url: 'https://www.ato.gov.au/forms-and-instructions/bas-a-quarterly-bas',
+    availability: 'PDF',
+    description: 'NAT 4189 - Quarterly GST, PAYG withholding and instalments'
+  },
+  'BAS F': {
+    url: 'https://www.ato.gov.au/forms-and-instructions/bas-f-quarterly-bas', 
+    availability: 'PDF',
+    description: 'NAT 4190 - Quarterly GST and PAYG withholding'
+  },
+  'BAS D': {
+    url: 'https://www.ato.gov.au/Forms/BAS-D---quarterly-BAS/',
+    availability: 'PDF',
+    description: 'NAT 4191 - Quarterly GST only'
+  },
+  'BAS Y': {
+    url: 'https://www.ato.gov.au/Forms/BAS-Y---monthly-BAS/',
+    availability: 'PDF',
+    description: 'NAT 14171 - Monthly GST and fuel tax credits'
+  },
+  'BAS P': {
+    url: 'https://www.ato.gov.au/forms-and-instructions/bas-p-annual-gst-return',
+    availability: 'PDF',
+    description: 'NAT 4646 - Annual GST return'
+  },
   
-  // AUSTRAC Forms (Cash Reporting)
-  'TTR': 'https://www.austrac.gov.au/business/how-comply-and-report-guidance-and-resources/reporting/threshold-transaction-reports-ttrs',
-  'AUSTRAC TTR': 'https://www.austrac.gov.au/business/how-comply-and-report-guidance-and-resources/reporting/threshold-transaction-reports-ttrs',
+  // PAYG Forms
+  'PAYG Withholding': {
+    url: 'https://www.ato.gov.au/business/payg-withholding/',
+    availability: 'ONLINE_ONLY',
+    description: 'Lodge via Single Touch Payroll',
+    portalUrl: 'https://www.ato.gov.au/business/single-touch-payroll/'
+  },
+  'PAYG Summary': {
+    url: 'https://www.ato.gov.au/business/single-touch-payroll/',
+    availability: 'ONLINE_ONLY',
+    description: 'Automated via Single Touch Payroll'
+  },
+  
+  // Other ATO Forms
+  'TFN Declaration': {
+    url: 'https://www.ato.gov.au/forms-and-instructions/tfn-declaration/',
+    availability: 'PDF',
+    description: 'Tax file number declaration form'
+  },
+  'ABN Application': {
+    url: 'https://www.abr.gov.au/business-super-funds-charities/applying-abn',
+    availability: 'ONLINE_ONLY',
+    description: 'Apply online via ABR',
+    portalUrl: 'https://www.abr.gov.au/'
+  },
+  'Tax Return': {
+    url: 'https://www.ato.gov.au/individuals/lodging-your-tax-return/',
+    availability: 'ONLINE_ONLY',
+    description: 'Lodge via myTax',
+    portalUrl: 'https://my.gov.au/'
+  },
+  
+  // AUSTRAC Forms - All require login
+  'TTR': {
+    url: 'https://www.austrac.gov.au/business/core-guidance/reporting/reporting-transactions-10000-and-over-threshold-transaction-reports-ttrs',
+    availability: 'LOGIN_REQUIRED',
+    description: 'Must submit via AUSTRAC Online within 10 business days',
+    portalUrl: 'https://online.austrac.gov.au/'
+  },
+  'AUSTRAC TTR': {
+    url: 'https://www.austrac.gov.au/business/core-guidance/reporting/reporting-transactions-10000-and-over-threshold-transaction-reports-ttrs',
+    availability: 'LOGIN_REQUIRED',
+    description: 'Threshold Transaction Report - $10,000+ cash',
+    portalUrl: 'https://online.austrac.gov.au/'
+  },
   
   // State Forms
-  'Payroll Tax': 'https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/payroll-tax',
+  'Payroll Tax': {
+    url: 'https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/payroll-tax',
+    availability: 'ONLINE_ONLY',
+    description: 'Lodge via state revenue office',
+    portalUrl: 'https://www.revenue.nsw.gov.au/help-centre/online-services'
+  }
 }
+
+// Legacy support - map to form info URLs
+const FORM_URLS: Record<string, string> = Object.entries(FORM_INFO).reduce((acc, [key, info]) => {
+  acc[key] = info.url
+  return acc
+}, {} as Record<string, string>)
 
 // Online filing URLs
 export const ONLINE_FILING_URLS: Record<string, string> = {
@@ -83,18 +167,47 @@ export const FORM_INSTRUCTIONS: Record<string, string[]> = {
   ]
 }
 
-// Download form with fallback
+// Get form information
+export function getFormInfo(formNumber: string): FormInfo | null {
+  return FORM_INFO[formNumber] || null
+}
+
+// Download or redirect to form
 export async function downloadForm(formNumber: string): Promise<void> {
-  const formUrl = FORM_URLS[formNumber]
+  const formInfo = getFormInfo(formNumber)
   
-  if (!formUrl) {
+  if (!formInfo) {
     // Fallback to ATO forms search
     window.open(`https://www.ato.gov.au/forms-and-instructions?search=${encodeURIComponent(formNumber)}`, '_blank')
     return
   }
   
-  // Open form in new tab
-  window.open(formUrl, '_blank')
+  // Handle different availability types
+  switch (formInfo.availability) {
+    case 'PDF':
+      // Direct to form page (user can download PDF from there)
+      window.open(formInfo.url, '_blank')
+      break
+      
+    case 'ONLINE_ONLY':
+      // Redirect to portal or online service
+      if (formInfo.portalUrl) {
+        window.open(formInfo.portalUrl, '_blank')
+      } else {
+        window.open(formInfo.url, '_blank')
+      }
+      break
+      
+    case 'LOGIN_REQUIRED':
+      // Show alert then redirect to portal
+      alert(`${formNumber} requires login to ${formInfo.description}. You'll be redirected to the portal.`)
+      if (formInfo.portalUrl) {
+        window.open(formInfo.portalUrl, '_blank')
+      } else {
+        window.open(formInfo.url, '_blank')
+      }
+      break
+  }
 }
 
 // Get online filing URL

@@ -1,7 +1,7 @@
 import React from 'react'
 import { RequiredForm, calculateDaysUntilDeadline, ensureDate } from '@/utils/types/analysis'
-import { FileText, Calendar, DollarSign, Download, AlertTriangle, ExternalLink, Globe } from 'lucide-react'
-import { downloadForm, getOnlineFilingUrl, generatePrefilledInstructions, getFormInstructions } from '@/utils/formService'
+import { FileText, Calendar, DollarSign, Download, AlertTriangle, ExternalLink, Globe, LogIn } from 'lucide-react'
+import { downloadForm, getOnlineFilingUrl, generatePrefilledInstructions, getFormInstructions, getFormInfo } from '@/utils/formService'
 
 interface RequiredFormsSectionProps {
   forms: RequiredForm[]
@@ -134,21 +134,49 @@ export default function RequiredFormsSection({ forms }: RequiredFormsSectionProp
 
                 {/* Actions */}
                 <div className="flex flex-col gap-3 lg:w-48">
-                  <button 
-                    onClick={() => downloadForm(form.formNumber)}
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download Form
-                  </button>
+                  {(() => {
+                    const formInfo = getFormInfo(form.formNumber)
+                    
+                    if (formInfo?.availability === 'PDF') {
+                      return (
+                        <button 
+                          onClick={() => downloadForm(form.formNumber)}
+                          className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download Form
+                        </button>
+                      )
+                    } else if (formInfo?.availability === 'LOGIN_REQUIRED') {
+                      return (
+                        <button 
+                          onClick={() => downloadForm(form.formNumber)}
+                          className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
+                        >
+                          <LogIn className="w-4 h-4" />
+                          Login Required
+                        </button>
+                      )
+                    } else {
+                      return (
+                        <button 
+                          onClick={() => downloadForm(form.formNumber)}
+                          className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                        >
+                          <Globe className="w-4 h-4" />
+                          Lodge Online
+                        </button>
+                      )
+                    }
+                  })()}
                   
                   {(form.filingMethod === 'ONLINE' || form.filingMethod === 'BOTH') && (
                     <button 
                       onClick={() => window.open(getOnlineFilingUrl(form.formNumber), '_blank')}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
                     >
-                      <Globe className="w-4 h-4" />
-                      File Online
+                      <ExternalLink className="w-4 h-4" />
+                      Filing Portal
                     </button>
                   )}
 
@@ -271,6 +299,21 @@ export default function RequiredFormsSection({ forms }: RequiredFormsSectionProp
         </div>
       </div>
 
+      {/* Form Availability Info */}
+      <div className="mt-4 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-semibold text-yellow-800 mb-2">Important: Form Availability</p>
+            <ul className="space-y-1 text-yellow-700">
+              <li>• <span className="font-medium">PDF Forms:</span> Can be downloaded and printed (sample only)</li>
+              <li>• <span className="font-medium">Online Only:</span> Must be lodged via ATO Business Portal or myGov</li>
+              <li>• <span className="font-medium">Login Required:</span> AUSTRAC forms require secure portal access</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       {/* Help Section */}
       <div className="mt-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
         <div className="flex items-start gap-3">
@@ -278,11 +321,24 @@ export default function RequiredFormsSection({ forms }: RequiredFormsSectionProp
           <div>
             <h6 className="font-semibold text-blue-800 mb-1">Need Help Filing?</h6>
             <p className="text-sm text-blue-700 mb-2">
-              Our form assistant can help you complete these forms accurately and on time.
+              Most ATO forms must be lodged electronically via the Business Portal. PDF forms are samples only.
             </p>
-            <button className="text-sm font-medium text-blue-600 hover:text-blue-800 underline">
-              Get Filing Assistance →
-            </button>
+            <div className="flex gap-4">
+              <a 
+                href="https://bp.ato.gov.au/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+              >
+                ATO Business Portal →
+              </a>
+              <a 
+                href="tel:132861" 
+                className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+              >
+                Call ATO: 13 28 61
+              </a>
+            </div>
           </div>
         </div>
       </div>
