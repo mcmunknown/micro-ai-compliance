@@ -118,10 +118,12 @@ export default function DeadlineBanner() {
             </button>
             
             <a 
-              href="tel:132861" 
-              className="bg-green-500 text-white px-4 py-1.5 rounded-lg font-semibold hover:bg-green-600 transition-colors text-sm flex items-center gap-2"
+              href="https://www.ato.gov.au/about-ato/contact-us" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-blue-500 text-white px-4 py-1.5 rounded-lg font-semibold hover:bg-blue-600 transition-colors text-sm flex items-center gap-2"
             >
-              CALL ATO
+              ATO RESOURCES
             </a>
           </div>
         </div>

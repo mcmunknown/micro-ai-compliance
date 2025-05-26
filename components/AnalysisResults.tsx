@@ -35,6 +35,13 @@ export default function AnalysisResults({
 
   return (
     <div className="space-y-6">
+      {/* Educational Disclaimer Watermark */}
+      <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 text-center">
+        <p className="text-lg font-bold text-yellow-800">⚠️ FOR EDUCATIONAL PURPOSES ONLY ⚠️</p>
+        <p className="text-sm text-yellow-700 mt-1">
+          This analysis is not tax advice. Please consult a registered tax professional for actual compliance guidance.
+        </p>
+      </div>
       {/* Header with Scan Info */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-4">
@@ -42,7 +49,7 @@ export default function AnalysisResults({
             <span className="text-3xl">📊</span>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                Audit Risk Analysis Report
+                Educational Compliance Analysis Report
               </h2>
               <p className="text-sm text-gray-600">
                 Scan ID: {scanId} • {new Date(timestamp).toLocaleString()} • {scanType.toUpperCase()} scan
@@ -220,11 +227,14 @@ export default function AnalysisResults({
         )}
       </div>
 
-      {/* Disclaimer */}
-      <div className="bg-gray-50 rounded-lg p-4 text-xs text-gray-600 text-center">
-        <p>
-          ⚠️ This analysis is for informational purposes only and does not constitute legal or tax advice. 
-          Always consult with qualified professionals for specific guidance on your tax situation.
+      {/* Educational Disclaimer Footer Watermark */}
+      <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 text-center">
+        <p className="text-lg font-bold text-yellow-800">🎓 EDUCATIONAL ANALYSIS ONLY 🎓</p>
+        <p className="text-sm text-yellow-700 mt-1">
+          This is not professional tax or legal advice. The information provided is for educational purposes only.
+        </p>
+        <p className="text-xs text-yellow-600 mt-2">
+          Always consult with a registered tax agent or qualified professional for specific guidance on your tax situation.
         </p>
       </div>
     </div>

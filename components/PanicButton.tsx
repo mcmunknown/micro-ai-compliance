@@ -34,10 +34,10 @@ export default function PanicButton() {
                 <Phone className="w-8 h-8 text-red-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                TALK TO AUSTRALIAN TAX EXPERT NOW
+                LEARN ABOUT TAX COMPLIANCE
               </h2>
               <p className="text-gray-600">
-                Stop panicking. Get ATO-compliant advice. Fix it together.
+                Educational resources to understand Australian tax requirements.
               </p>
             </div>
 
@@ -45,62 +45,63 @@ export default function PanicButton() {
               <div className="flex items-start gap-3">
                 <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Available Mon-Fri 8am-6pm AEST</p>
-                  <p className="text-sm text-gray-600">Australian tax professionals ready to help</p>
+                  <p className="font-semibold">ATO Contact Hours: Mon-Fri 8am-6pm AEST</p>
+                  <p className="text-sm text-gray-600">Official ATO resources and guides available</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <DollarSign className="w-5 h-5 text-green-600 mt-0.5" />
                 <div>
-                  <p className="font-semibold">$99 for 30 minutes</p>
-                  <p className="text-sm text-gray-600">ATO-experienced advisors</p>
+                  <p className="font-semibold">Free ATO Resources</p>
+                  <p className="text-sm text-gray-600">Educational guides and compliance tools</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <Shield className="w-5 h-5 text-purple-600 mt-0.5" />
                 <div>
-                  <p className="font-semibold">100% Confidential</p>
-                  <p className="text-sm text-gray-600">Registered Australian tax agents</p>
+                  <p className="font-semibold">Educational Purpose Only</p>
+                  <p className="text-sm text-gray-600">Not a substitute for professional advice</p>
                 </div>
               </div>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <p className="text-sm font-semibold text-gray-700 mb-2">
-                They'll help you with:
+                Learn about:
               </p>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>✓ Understanding ATO compliance requirements</li>
-                <li>✓ Lodging corrections via myGov/ATO portal</li>
-                <li>✓ Dealing with ATO penalties & notices</li>
-                <li>✓ Avoiding AUSTRAC reporting issues</li>
+                <li>✓ ATO compliance requirements</li>
+                <li>✓ How to use myGov/ATO portal</li>
+                <li>✓ Understanding penalties & notices</li>
+                <li>✓ AUSTRAC reporting requirements</li>
               </ul>
             </div>
 
             <div className="space-y-3">
               <a
-                href="tel:132861"
-                className="block w-full bg-red-600 hover:bg-red-700 text-white rounded-lg py-3 font-bold text-center transition-colors"
+                href="https://www.ato.gov.au/about-ato/contact-us"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-bold text-center transition-colors"
               >
-                📞 CALL ATO: 13 28 61
+                📚 ATO RESOURCES & GUIDES
               </a>
 
               <button
                 onClick={() => {
-                  // In a real app, this would open a chat widget
-                  alert('Chat feature coming soon! Please call 13 28 61 for ATO assistance.')
+                  window.open('https://www.ato.gov.au/calculators-and-tools', '_blank')
                 }}
-                className="block w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-bold text-center transition-colors flex items-center justify-center gap-2"
+                className="block w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 font-bold text-center transition-colors flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-5 h-5" />
-                START LIVE CHAT
+                ATO CALCULATORS & TOOLS
               </button>
             </div>
 
             <p className="text-xs text-gray-500 text-center mt-4">
-              Average wait time: Under 2 minutes
+              For professional advice, consult a registered tax agent
             </p>
           </div>
         </div>

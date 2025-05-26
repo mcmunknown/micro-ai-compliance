@@ -5,6 +5,7 @@ import DocumentUpload from '@/components/DocumentUpload'
 import AuthForm from '@/components/AuthForm'
 import CreditsDisplay from '@/components/CreditsDisplay'
 import BuyCreditsModal from '@/components/BuyCreditsModal'
+import DisclaimerModal from '@/components/DisclaimerModal'
 import { getUserCredits, UserCredits } from '@/utils/credits'
 
 export default function Home() {
@@ -13,9 +14,16 @@ export default function Home() {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
   const [showBuyCredits, setShowBuyCredits] = useState(false)
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
+    // Check if disclaimer has been accepted
+    const accepted = localStorage.getItem('disclaimerAccepted')
+    if (accepted) {
+      setDisclaimerAccepted(true)
+    }
+    
     // Handle successful payment redirect
     if (router.query.payment === 'success' && router.query.credits) {
       const creditsAdded = parseInt(router.query.credits as string)
@@ -47,8 +55,8 @@ export default function Home() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center py-6">
                 <div className="flex items-center">
-                  <span className="text-2xl font-bold text-gray-900">TaxScanner</span>
-                  <span className="ml-2 text-xs font-medium text-primary-600 bg-primary-50 px-2 py-1 rounded-full">AI</span>
+                  <span className="text-2xl font-bold text-gray-900">TaxLearner</span>
+                  <span className="ml-2 text-xs font-medium text-primary-600 bg-primary-50 px-2 py-1 rounded-full">Educational</span>
                 </div>
                 <button
                   onClick={() => {
@@ -273,13 +281,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
+      {/* Disclaimer Modal */}
+      <DisclaimerModal onAccept={() => setDisclaimerAccepted(true)} />
+      
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl font-bold text-gray-900">
-                AI Tax Compliance Scanner
+                AI Tax Compliance Learning Tool
               </h1>
             </div>
             <div className="flex items-center gap-4">
@@ -306,7 +317,7 @@ export default function Home() {
             Welcome back, {user.email?.split('@')[0]}!
           </h2>
           <p className="text-gray-600">
-            Upload your tax documents, invoices, or financial CSVs to scan for ATO/IRS compliance risks.
+            Upload documents to learn about potential compliance issues. This educational analysis helps you understand what to discuss with your tax professional.
           </p>
         </div>
 
@@ -387,8 +398,8 @@ export default function Home() {
           <p className="mb-2">
             Built with ❤️ by indie makers • Powered by Claude AI, Stripe & Firebase
           </p>
-          <p>
-            This tool identifies potential risks - always consult a tax professional for advice
+          <p className="font-bold">
+            ⚠️ EDUCATIONAL TOOL ONLY - Not tax advice. Always consult a registered tax professional.
           </p>
         </div>
       </footer>

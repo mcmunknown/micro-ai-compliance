@@ -449,16 +449,16 @@ export default function ActionTimeline({ recommendations }: ActionTimelineProps)
                       <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-bold text-green-800">IF YOU GET STUCK:</p>
-                            <p className="text-sm text-green-700">Call our expert at {detailedInstructions[taskId].helpPhone}</p>
-                            <p className="text-xs text-green-600">{detailedInstructions[taskId].helpCost}</p>
+                            <p className="font-bold text-green-800">IF YOU NEED HELP:</p>
+                            <p className="text-sm text-green-700">Contact the ATO: {detailedInstructions[taskId].helpPhone}</p>
+                            <p className="text-xs text-green-600">Or consult a registered tax professional</p>
                           </div>
                           <button 
-                            onClick={() => window.open('tel:132861', '_self')}
-                            className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
+                            onClick={() => window.open('https://www.ato.gov.au/about-ato/contact-us', '_blank')}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
                           >
-                            <Phone className="w-5 h-5" />
-                            CALL ATO EXPERT
+                            <ExternalLink className="w-5 h-5" />
+                            ATO RESOURCES
                           </button>
                         </div>
                       </div>
